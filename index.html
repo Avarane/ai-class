@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Lab — Learn how AI works by doing it</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F5F8FD; --grid:#E3EAF6; --card:#FFFFFF; --ink:#172554; --muted:#4B587C;
+  --line:#D3DCEE; --green:#0F8A5F; --green-soft:#D7F2E6; --sun:#FFC233; --sun-soft:#FFF1CC;
+  --coral:#D93A40; --coral-soft:#FCE0E1; --blue:#2F5BEA; --blue-soft:#DDE6FF;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0D1530; --grid:#16204A; --card:#151F42; --ink:#E9EEFF; --muted:#A8B4D8;
+    --line:#2A386B; --green:#3CCB8F; --green-soft:#123B30; --sun:#FFC94D; --sun-soft:#3A3115;
+    --coral:#FF6B70; --coral-soft:#42191D; --blue:#7C9BFF; --blue-soft:#1C2B5E; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0D1530; --grid:#16204A; --card:#151F42; --ink:#E9EEFF; --muted:#A8B4D8;
+  --line:#2A386B; --green:#3CCB8F; --green-soft:#123B30; --sun:#FFC94D; --sun-soft:#3A3115;
+  --coral:#FF6B70; --coral-soft:#42191D; --blue:#7C9BFF; --blue-soft:#1C2B5E; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; font-family:var(--body); color:var(--ink); font-size:17px; line-height:1.6;
+  background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px;
+}
+h1,h2,h3{font-family:var(--display); line-height:1.1; margin:0 0 .5em; letter-spacing:-.01em}
+p{margin:0 0 1em; max-width:68ch}
+button,input,textarea,select{font:inherit; color:inherit}
+:focus-visible{outline:3px solid var(--blue); outline-offset:2px; border-radius:6px}
+img,svg,canvas{max-width:100%}
+
+/* top bar */
+.top{position:sticky; top:env(safe-area-inset-top,0px); z-index:10; background:var(--card); border-bottom:2px solid var(--ink);
+  display:flex; align-items:center; gap:16px; padding:10px clamp(14px,3vw,28px)}
+.logo{display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:800; font-size:1.25rem; cursor:pointer; background:none; border:0; padding:0}
+.logo-mark{width:34px; height:34px; border-radius:10px; background:var(--sun); border:2px solid var(--ink); display:grid; place-items:center; font-size:1.1rem}
+.xp{white-space:nowrap; margin-left:auto; display:flex; align-items:center; gap:10px; font-weight:700; font-size:.95rem}
+.xp-bar{width:clamp(70px,16vw,180px); height:12px; border:2px solid var(--ink); border-radius:99px; overflow:hidden; background:var(--paper)}
+.xp-bar i{display:block; height:100%; background:var(--green); width:0; transition:width .5s}
+.icon-btn{border:2px solid var(--ink); background:var(--card); border-radius:10px; width:38px; height:38px; cursor:pointer; font-size:1rem}
+
+/* layout */
+.shell{display:grid; grid-template-columns:270px 1fr; gap:0; max-width:1280px; margin:0 auto}
+nav.path{padding:24px 18px; position:sticky; top:calc(60px + env(safe-area-inset-top,0px)); align-self:start; max-height:calc(100vh - 60px); overflow:auto}
+nav.path h2{font-size:1rem; color:var(--muted); font-family:var(--body); font-weight:700; margin-bottom:12px}
+.steps{list-style:none; margin:0; padding:0; position:relative}
+.steps::before{content:""; position:absolute; left:17px; top:18px; bottom:18px; width:3px; background:var(--line)}
+.steps li{position:relative; margin-bottom:6px}
+.steps button{display:flex; align-items:center; gap:12px; width:100%; text-align:left; background:none; border:0; padding:6px 8px 6px 0; cursor:pointer; border-radius:10px}
+.steps button:hover .num{transform:scale(1.08)}
+.num{flex:none; width:37px; height:37px; border-radius:50%; display:grid; place-items:center; border:2.5px solid var(--ink); background:var(--card); font-weight:700; font-family:var(--display); position:relative; z-index:1; transition:transform .15s}
+.steps .done .num{background:var(--green); color:#fff; border-color:var(--green)}
+.steps .active .num{background:var(--sun); color:#172554}
+.steps .label{font-size:.95rem; line-height:1.25}
+.steps .active .label{font-weight:700}
+
+main{padding:28px clamp(16px,4vw,48px) 80px; min-width:0}
+.stage{max-width:900px}
+
+/* home */
+.hero{padding:20px 0 30px}
+.hero h1{font-size:clamp(2.4rem,7vw,4.6rem); font-weight:800; max-width:14ch}
+.hero h1 .scribble{background:linear-gradient(transparent 62%, var(--sun) 62%, var(--sun) 92%, transparent 92%)}
+.hero p{font-size:1.15rem; color:var(--muted)}
+.home-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px; margin-top:28px}
+.lesson-card{background:var(--card); border:2px solid var(--line); border-radius:14px; padding:16px; text-align:left; cursor:pointer; display:flex; gap:12px}
+.lesson-card:hover{border-color:var(--ink)}
+.lesson-card h3{font-size:1.05rem; margin:0 0 4px}
+.lesson-card p{font-size:.9rem; color:var(--muted); margin:0}
+.lesson-card.done{border-color:var(--green)}
+
+/* lesson */
+.kicker{color:var(--muted); font-weight:700; font-size:.95rem; margin-bottom:6px}
+.lesson h1{font-size:clamp(2rem,5vw,3.2rem); font-weight:800}
+.intro{font-size:1.1rem}
+.lab{background:var(--card); border:2.5px solid var(--ink); border-radius:18px; padding:clamp(14px,3vw,24px); margin:22px 0; box-shadow:6px 6px 0 var(--ink)}
+.lab h2{font-size:1.35rem}
+.lab-tag{display:inline-block; background:var(--sun); color:#172554; font-weight:700; font-size:.82rem; padding:2px 10px; border-radius:99px; margin-bottom:10px; border:2px solid var(--ink)}
+.note{background:var(--blue-soft); border-left:5px solid var(--blue); padding:12px 16px; border-radius:0 12px 12px 0; margin:16px 0}
+.note p:last-child{margin:0}
+.btn{display:inline-flex; align-items:center; gap:8px; border:2.5px solid var(--ink); background:var(--card); padding:9px 16px; border-radius:12px; font-weight:700; cursor:pointer; transition:transform .08s}
+.btn:active{transform:translateY(2px)}
+.btn.primary{background:var(--ink); color:var(--paper)}
+.btn.sun{background:var(--sun); color:#172554}
+.btn.small{padding:5px 11px; font-size:.9rem; border-width:2px}
+.btn[aria-pressed="true"]{background:var(--sun); color:#172554}
+.row{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
+.finish{margin-top:30px; padding-top:20px; border-top:2px dashed var(--line); display:flex; flex-wrap:wrap; gap:12px; align-items:center; justify-content:space-between}
+
+/* AI or not */
+.sort-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px}
+.sort-card{border:2px solid var(--line); border-radius:14px; padding:14px; background:var(--paper)}
+.sort-card .emoji{font-size:1.8rem}
+.sort-card h3{font-size:1.05rem; margin:4px 0 10px; font-family:var(--body)}
+.sort-card .why{font-size:.9rem; margin-top:10px; display:none}
+.sort-card.right{border-color:var(--green); background:var(--green-soft)}
+.sort-card.wrong{border-color:var(--coral); background:var(--coral-soft)}
+.sort-card.right .why,.sort-card.wrong .why{display:block}
+
+/* pixels */
+.pix-wrap{display:grid; grid-template-columns:auto 1fr; gap:22px; align-items:start}
+.pix{display:grid; grid-template-columns:repeat(10,1fr); width:min(300px,78vw); aspect-ratio:1; border:2.5px solid var(--ink); touch-action:none; user-select:none; background:var(--paper)}
+.pix div{border:1px solid var(--line)}
+.pix div.on{background:var(--ink)}
+.matrix{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:clamp(.7rem,1.6vw,.95rem); line-height:1.5; overflow-x:auto; background:var(--paper); border:2px solid var(--line); border-radius:10px; padding:10px}
+.matrix b{color:var(--coral)}
+.guess{font-family:var(--display); font-size:1.6rem; font-weight:800}
+
+/* canvas labs */
+.canvas-box{border:2.5px solid var(--ink); border-radius:12px; overflow:hidden; position:relative; touch-action:none; background:var(--paper)}
+.canvas-box canvas{display:block; width:100%; height:360px; cursor:crosshair}
+.axis{font-size:.85rem; color:var(--muted)}
+.legend{display:flex; gap:16px; flex-wrap:wrap; font-size:.92rem}
+.dot{display:inline-block; width:14px; height:14px; border-radius:50%; vertical-align:-2px; margin-right:6px; border:2px solid var(--ink)}
+.stat{font-family:var(--display); font-weight:800; font-size:1.5rem}
+input[type=range]{accent-color:var(--blue); width:100%}
+
+/* neuron */
+.neuron-grid{display:grid; grid-template-columns:1fr 1fr; gap:20px}
+.slider-row{display:grid; grid-template-columns:1fr auto; gap:2px 10px; margin-bottom:12px}
+.slider-row label{font-weight:700; font-size:.95rem}
+.slider-row output{font-weight:700; font-variant-numeric:tabular-nums}
+.slider-row input{grid-column:1/-1}
+.toggle{display:flex; align-items:center; gap:10px; padding:8px 10px; border:2px solid var(--line); border-radius:10px; margin-bottom:8px; cursor:pointer; background:var(--paper)}
+.toggle input{width:20px; height:20px; accent-color:var(--green)}
+.decision{font-family:var(--display); font-size:2rem; font-weight:800; text-align:center; padding:10px; border-radius:12px; border:2.5px solid var(--ink)}
+table.truth{width:100%; border-collapse:collapse; font-size:.92rem}
+table.truth th,table.truth td{border-bottom:1px solid var(--line); padding:5px 6px; text-align:center}
+.ok{color:var(--green); font-weight:700} .bad{color:var(--coral); font-weight:700}
+.table-scroll{overflow-x:auto}
+
+/* words */
+textarea{width:100%; min-height:110px; border:2px solid var(--line); border-radius:12px; padding:10px; background:var(--paper); resize:vertical}
+input[type=text]{border:2.5px solid var(--ink); border-radius:12px; padding:9px 12px; background:var(--paper); min-width:0}
+.bars{margin-top:12px}
+.bar-row{display:grid; grid-template-columns:minmax(70px,140px) 1fr 52px; gap:10px; align-items:center; margin-bottom:6px}
+.bar-row span:first-child{font-weight:700; overflow:hidden; text-overflow:ellipsis}
+.bar{height:20px; background:var(--blue); border-radius:5px; transition:width .4s}
+.bar-track{background:var(--paper); border:1px solid var(--line); border-radius:6px}
+.bar-row button{all:unset; cursor:pointer; font-weight:700; text-decoration:underline; text-decoration-color:var(--sun); text-decoration-thickness:3px}
+.sentence{font-size:1.3rem; font-family:var(--display); font-weight:700; padding:14px; border:2px dashed var(--line); border-radius:12px; min-height:60px; margin-top:12px}
+
+/* bias */
+.groups{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px}
+.group{border:2px solid var(--line); border-radius:14px; padding:14px; background:var(--paper)}
+.meter{height:16px; border-radius:99px; background:var(--line); overflow:hidden; margin:8px 0}
+.meter i{display:block; height:100%; transition:width .4s, background .4s}
+.scenario{border:2px solid var(--line); border-radius:14px; padding:16px; margin-bottom:12px; background:var(--paper)}
+.choices{display:flex; flex-direction:column; gap:8px; margin-top:8px}
+.choice{text-align:left; border:2px solid var(--line); border-radius:10px; padding:10px 12px; background:var(--card); cursor:pointer}
+.choice:hover{border-color:var(--ink)}
+.choice.right{border-color:var(--green); background:var(--green-soft)}
+.choice.wrong{border-color:var(--coral); background:var(--coral-soft)}
+.feedback{margin-top:10px; font-size:.95rem}
+
+/* quiz */
+.q-card{border:2px solid var(--line); border-radius:14px; padding:16px; margin-bottom:14px; background:var(--paper)}
+.q-card h3{font-family:var(--body); font-size:1.08rem}
+.cert{border:4px double var(--ink); border-radius:16px; padding:clamp(18px,4vw,36px); text-align:center; background:var(--card); margin-top:20px}
+.cert h2{font-size:clamp(1.6rem,4vw,2.4rem)}
+.cert .name{font-family:var(--display); font-size:clamp(1.8rem,5vw,2.8rem); font-weight:800; border-bottom:3px solid var(--sun); display:inline-block; padding:0 12px; margin:8px 0 14px}
+
+.toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translateX(-50%) translateY(120px); background:var(--ink); color:var(--paper); padding:10px 18px; border-radius:12px; font-weight:700; transition:transform .3s; z-index:20}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* part labels */
+.steps li.part{font-weight:700; font-size:.85rem; color:var(--muted); padding:10px 0 6px 50px; margin:4px 0 2px}
+.part-title{font-size:1.5rem; margin:34px 0 4px}
+.part-title + .home-grid{margin-top:14px}
+.ai-pill{display:inline-flex; align-items:center; gap:6px; font-size:.85rem; font-weight:700; padding:3px 10px; border-radius:99px; border:2px solid var(--line); background:var(--paper)}
+.ai-pill.on{border-color:var(--green); background:var(--green-soft)}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{border:2px solid var(--line); background:var(--paper); border-radius:99px; padding:5px 13px; cursor:pointer; font-size:.92rem}
+.chip:hover{border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink); color:var(--paper); border-color:var(--ink)}
+.status{font-size:.92rem; color:var(--muted); min-height:1.4em}
+
+/* story dice */
+.reels{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:14px 0}
+.reel{border:2.5px solid var(--ink); border-radius:14px; padding:12px; background:var(--paper); min-height:118px; display:flex; flex-direction:column}
+.reel small{color:var(--muted); font-weight:700}
+.reel .face{font-family:var(--display); font-weight:700; font-size:1.08rem; line-height:1.25; margin:6px 0 auto}
+.reel.spinning .face{filter:blur(1.5px); opacity:.6}
+.reel .lock{align-self:flex-start; margin-top:8px; font-size:.82rem; border:0; background:none; cursor:pointer; color:var(--muted); padding:0; text-decoration:underline}
+.reel.locked{border-color:var(--green); box-shadow:inset 0 0 0 2px var(--green)}
+.prompt-box{font-family:ui-monospace,Menlo,Consolas,monospace; font-size:.85rem; background:var(--paper); border:2px dashed var(--line); border-radius:12px; padding:12px; white-space:pre-wrap; overflow-x:auto}
+.story{display:flex; flex-direction:column; gap:10px; margin:16px 0}
+.story p{margin:0; padding:12px 14px; border-radius:12px; max-width:none; position:relative}
+.story .me{background:var(--sun-soft); border-left:5px solid var(--sun)}
+.story .ai{background:var(--blue-soft); border-left:5px solid var(--blue)}
+.story .who{display:block; font-size:.78rem; font-weight:700; color:var(--muted); margin-bottom:2px}
+.voice{display:flex; height:16px; border-radius:99px; overflow:hidden; border:2px solid var(--ink); margin:6px 0}
+.voice i{display:block; transition:width .4s}
+
+/* art */
+.studio{display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); gap:20px; align-items:start}
+.art-frame{border:3px solid var(--ink); border-radius:14px; overflow:hidden; background:#000; aspect-ratio:4/3; position:relative}
+.art-frame canvas,.art-frame img{display:block; width:100%; height:100%; object-fit:cover}
+.art-frame .step-badge{position:absolute; left:10px; bottom:10px; background:rgba(0,0,0,.65); color:#fff; font-weight:700; font-size:.82rem; padding:3px 10px; border-radius:99px}
+.understood{display:flex; flex-wrap:wrap; gap:6px; margin-top:6px}
+.understood span{font-size:.85rem; padding:3px 10px; border-radius:8px; background:var(--green-soft); border:1.5px solid var(--green)}
+.understood span.miss{background:var(--paper); border-color:var(--line); color:var(--muted); text-decoration:line-through}
+
+/* music */
+.seq-wrap{overflow-x:auto; padding-bottom:6px}
+.seq{display:grid; grid-template-columns:62px repeat(16,minmax(26px,1fr)); gap:3px; min-width:560px}
+.seq .rl{font-size:.8rem; font-weight:700; color:var(--muted); display:flex; align-items:center}
+.seq button{aspect-ratio:1; border:1.5px solid var(--line); border-radius:6px; background:var(--paper); cursor:pointer; padding:0}
+.seq button.seed{background:var(--sun-soft)}
+.seq button.gap4{margin-left:4px}
+.seq button.on{background:var(--ink); border-color:var(--ink)}
+.seq button.on.ai{background:var(--blue); border-color:var(--blue)}
+.seq button.drum.on{background:var(--coral); border-color:var(--coral)}
+.seq button.play{outline:3px solid var(--green); outline-offset:-1px}
+.seq .sep{grid-column:1/-1; height:6px}
+.trans{font-size:.95rem}
+
+/* ideas */
+.slot{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; background:var(--ink); padding:12px; border-radius:16px}
+.slot div{background:var(--card); border-radius:10px; padding:12px; min-height:96px; display:flex; flex-direction:column; justify-content:center; text-align:center}
+.slot small{color:var(--muted); font-weight:700; font-size:.8rem}
+.slot b{font-family:var(--display); font-size:1.08rem; line-height:1.25}
+.slot .spin b{animation:roll .12s linear infinite}
+@keyframes roll{0%{transform:translateY(-4px);opacity:.4}100%{transform:translateY(4px);opacity:.9}}
+.idea-card{border:2.5px solid var(--ink); border-radius:14px; padding:16px; background:var(--card); margin-top:14px}
+.idea-card h3{font-size:1.3rem; margin-bottom:4px}
+.idea-card ol{margin:6px 0 10px; padding-left:20px}
+
+/* ethics */
+.eth{border:2px solid var(--line); border-radius:14px; padding:14px; background:var(--paper); margin-bottom:10px}
+.eth.right{border-color:var(--green); background:var(--green-soft)}
+.eth.wrong{border-color:var(--coral); background:var(--coral-soft)}
+.badge{display:inline-flex; align-items:center; gap:12px; border:3px solid var(--ink); border-radius:16px; padding:14px 18px; background:var(--sun-soft); margin-top:12px}
+.badge .big{font-size:2.4rem}
+
+/* gallery */
+.gal{display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:14px; margin-top:16px}
+.gal-item{border:2.5px solid var(--ink); border-radius:14px; background:var(--card); overflow:hidden; display:flex; flex-direction:column}
+.gal-item img{display:block; width:100%; aspect-ratio:4/3; object-fit:cover; border-bottom:2px solid var(--ink)}
+.gal-item .gi{padding:12px; display:flex; flex-direction:column; gap:8px; flex:1}
+.gal-item .gi p{font-size:.92rem; margin:0; max-height:9.5em; overflow:auto; white-space:pre-wrap}
+.gal-item h3{font-size:1.05rem; margin:0}
+.mini-roll{display:grid; grid-template-columns:repeat(16,1fr); gap:2px; height:56px; background:var(--paper); border-radius:6px; padding:4px; position:relative}
+.mini-roll i{display:block; background:var(--blue); border-radius:2px}
+
+/* ===== simulation game ===== */
+.missions{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px}
+.mission{text-align:left; border:2.5px solid var(--line); border-radius:14px; padding:14px; background:var(--paper); cursor:pointer; display:flex; flex-direction:column; gap:4px}
+.mission:hover{border-color:var(--ink)}
+.mission[aria-pressed="true"]{border-color:var(--ink); background:var(--sun-soft); box-shadow:4px 4px 0 var(--ink)}
+.mission .em{font-size:1.8rem}
+.mission b{font-family:var(--display); font-size:1.1rem}
+.mission span{font-size:.88rem; color:var(--muted)}
+.hud{display:grid; grid-template-columns:repeat(5,1fr); gap:8px; background:var(--ink); color:var(--paper); border-radius:16px; padding:10px; position:sticky; top:calc(62px + env(safe-area-inset-top,0px)); z-index:5}
+.hud div{text-align:center; padding:4px}
+.hud small{display:block; font-size:.75rem; opacity:.8}
+.hud b{font-family:var(--display); font-size:1.25rem; font-variant-numeric:tabular-nums}
+.game{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; margin-top:16px}
+.panel{background:var(--card); border:2.5px solid var(--ink); border-radius:16px; padding:14px}
+.panel h3{font-size:1.1rem; margin-bottom:8px}
+.kv{display:flex; justify-content:space-between; gap:10px; font-size:.92rem; margin:6px 0 2px}
+.kv b{font-variant-numeric:tabular-nums}
+.stack{display:flex; height:14px; border-radius:99px; overflow:hidden; background:var(--line)}
+.stack i{display:block; transition:width .4s}
+.hidden-stat{color:var(--muted); font-style:italic}
+.actions{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:10px}
+.act{text-align:left; border:2px solid var(--ink); border-radius:12px; padding:10px; background:var(--paper); cursor:pointer; display:flex; flex-direction:column; gap:3px; min-height:110px}
+.act:hover:not(:disabled){background:var(--sun-soft)}
+.act:disabled{opacity:.42; cursor:not-allowed; border-color:var(--line)}
+.act .ic{font-size:1.4rem}
+.act b{font-size:.95rem; line-height:1.2}
+.act small{font-size:.8rem; color:var(--muted); line-height:1.3}
+.act .cost{margin-top:auto; font-size:.8rem; font-weight:700}
+.log{max-height:240px; overflow:auto; font-size:.9rem; display:flex; flex-direction:column; gap:6px}
+.log p{margin:0; padding:6px 10px; border-radius:8px; background:var(--paper); max-width:none}
+.log p.tip{background:var(--blue-soft)}
+.log p.bad{background:var(--coral-soft)}
+.log p.good{background:var(--green-soft)}
+.modal{position:fixed; inset:0; background:rgba(8,12,30,.6); display:grid; place-items:center; z-index:30; padding:16px}
+.modal .card{background:var(--card); border:3px solid var(--ink); border-radius:18px; padding:clamp(16px,3vw,26px); max-width:560px; width:100%; max-height:90vh; overflow:auto; box-shadow:8px 8px 0 var(--sun)}
+.modal .card .em{font-size:2.6rem}
+.modal .choices{margin-top:12px}
+.end-stars{font-size:2.4rem; letter-spacing:4px}
+.report li{margin-bottom:6px}
+@media (max-width:860px){.game{grid-template-columns:1fr}.hud{grid-template-columns:repeat(3,1fr)}.hud div:nth-child(n+4){display:none}}
+
+@media (max-width:860px){
+  .studio,.reels,.slot{grid-template-columns:1fr}
+  .steps li.part{display:none}
+  .top .btn.small{padding:5px 8px}
+  .top .gl{display:none}
+  .top{gap:10px}
+  .shell{grid-template-columns:1fr}
+  nav.path{position:static; max-height:none; padding:14px 14px 0; overflow-x:auto}
+  nav.path h2{display:none}
+  .steps{display:flex; gap:4px}
+  .steps::before{left:18px; right:18px; top:18px; bottom:auto; width:auto; height:3px}
+  .steps button{flex-direction:column; gap:4px; padding:0 4px; width:auto}
+  .steps .label{display:none}
+  .neuron-grid,.groups,.pix-wrap{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important; animation:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="logo" id="homeBtn" aria-label="Go to home"><span class="logo-mark">🧠</span><span class="gl">AI Lab</span></button>
+  <div class="xp" aria-live="polite"><span id="xpText">0 XP</span><span class="xp-bar"><i id="xpFill"></i></span></div>
+  <button class="btn small" id="galleryBtn" aria-label="My gallery">🖼️<span class="gl"> My gallery</span></button>
+  <button class="icon-btn" id="themeBtn" aria-label="Switch light or dark mode">◐</button>
+</header>
+<div class="shell">
+  <nav class="path" aria-label="Lessons">
+    <h2>Your learning path</h2>
+    <ol class="steps" id="steps"></ol>
+  </nav>
+  <main><div class="stage" id="stage"></div></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+/* ---------- state ---------- */
+const LESSONS=[
+ {id:"what",part:1,title:"What is AI?",blurb:"Sort everyday tech into AI and not-AI."},
+ {id:"pixels",part:1,title:"How computers see",blurb:"Draw a picture and watch it turn into numbers."},
+ {id:"teach",part:1,title:"Teach a machine",blurb:"Give examples and let the computer sort new ones."},
+ {id:"neuron",part:1,title:"Inside a neuron",blurb:"Build the tiny decision-maker that powers AI."},
+ {id:"learn",part:1,title:"How machines learn",blurb:"Watch a computer fix its own mistakes."},
+ {id:"words",part:1,title:"Predicting words",blurb:"Build a mini chatbot brain from sentences."},
+ {id:"fair",part:1,title:"AI and fairness",blurb:"See how bad data makes unfair AI."},
+ {id:"story",part:2,title:"Story studio",blurb:"Roll the story dice and co-write a tale with AI."},
+ {id:"art",part:2,title:"Picture studio",blurb:"Turn words into art and watch it appear from noise."},
+ {id:"music",part:2,title:"Music studio",blurb:"Compose with AI and transform your voice."},
+ {id:"ideas",part:2,title:"Idea lab",blurb:"Spin the idea machine and invent for your community."},
+ {id:"ethics",part:2,title:"The creator's code",blurb:"Decide what is fair when you create with AI."},
+ {id:"sim",part:2,title:"AI Founder: the game",blurb:"Run an AI startup for 12 weeks and help a community."},
+ {id:"quiz",part:2,title:"Final challenge",blurb:"Test yourself and earn your certificate."}
+];
+const store={get(k,d){try{const v=localStorage.getItem("ailab_"+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem("ailab_"+k,JSON.stringify(v))}catch(e){}}};
+let state=store.get("state",{done:[],xp:0,awarded:[]});
+let current=null;
+const $=s=>document.querySelector(s);
+const stage=$("#stage");
+const MAXXP=LESSONS.length*50+200;
+function save(){store.set("state",state)}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove("show"),2200)}
+function award(key,amount,msg){if(state.awarded.includes(key))return;state.awarded.push(key);state.xp+=amount;save();renderXP();toast(`+${amount} XP · ${msg}`)}
+function renderXP(){$("#xpText").textContent=state.xp+" XP";$("#xpFill").style.width=Math.min(100,state.xp/MAXXP*100)+"%"}
+function complete(id){if(!state.done.includes(id)){state.done.push(id);state.xp+=50;save();renderXP();toast("+50 XP · Lesson complete")}renderSteps()}
+
+/* ---------- theme ---------- */
+(function(){const t=store.get("theme",null);if(t)document.documentElement.dataset.theme=t})();
+$("#themeBtn").onclick=()=>{const dark=getComputedStyle(document.documentElement).colorScheme.includes("dark");const n=dark?"light":"dark";document.documentElement.dataset.theme=n;store.set("theme",n);if(current&&redraw)redraw()};
+let redraw=null;
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------- nav ---------- */
+function renderSteps(){
+  $("#steps").innerHTML=LESSONS.map((l,i)=>`${i===0?'<li class="part">Part 1: How AI works</li>':''}${l.part===2&&LESSONS[i-1].part===1?'<li class="part">Part 2: Create with AI</li>':''}<li class="${state.done.includes(l.id)?"done":""} ${current===i?"active":""}"><button data-i="${i}" aria-label="Lesson ${i+1}: ${l.title}"><span class="num">${state.done.includes(l.id)?"✓":i+1}</span><span class="label">${l.title}</span></button></li>`).join("");
+  $("#steps").querySelectorAll("button").forEach(b=>b.onclick=()=>open(+b.dataset.i));
+}
+$("#homeBtn").onclick=home;
+function home(){
+  current=null;redraw=null;stopAudio();renderSteps();
+  const last=LESSONS.length-1;
+  const next=LESSONS.findIndex(l=>!state.done.includes(l.id));
+  const card=(l,i)=>`<button class="lesson-card ${state.done.includes(l.id)?"done":""}" data-i="${i}"><span class="num">${state.done.includes(l.id)?"✓":i+1}</span><span><h3>${l.title}</h3><p>${l.blurb}</p></span></button>`;
+  stage.innerHTML=`<section class="hero">
+    <h1>Understand AI. Then <span class="scribble">create</span> with it.</h1>
+    <p>AI is not magic. It is patterns, numbers and lots of examples. First you will draw, train and tinker your way to understanding how it works. Then you will use it as a creative partner to write stories, make pictures, compose music and invent ideas for your community.</p>
+    <div class="row"><button class="btn primary" id="startBtn">${state.done.length?"Continue lesson "+((next<0?last:next)+1):"Start lesson 1"}</button>
+    <button class="btn" id="jumpCreate">Jump to the creative studios</button>
+    <span class="axis">${state.done.length} of ${LESSONS.length} lessons done</span></div>
+  </section>
+  <h2 class="part-title">Part 1: How AI works</h2>
+  <div class="home-grid">${LESSONS.map((l,i)=>l.part===1?card(l,i):"").join("")}</div>
+  <h2 class="part-title">Part 2: Create with AI</h2>
+  <p class="axis">${AI?"🟢 Real AI helper is switched on for the studios.":"Studios and the startup game work offline. Where available, a real AI helper can join in too."}</p>
+  <div class="home-grid">${LESSONS.map((l,i)=>l.part===2?card(l,i):"").join("")}</div>`;
+  $("#startBtn").onclick=()=>open(next<0?last:next);
+  $("#jumpCreate").onclick=()=>open(LESSONS.findIndex(l=>l.part===2));
+  stage.querySelectorAll(".lesson-card").forEach(b=>b.onclick=()=>open(+b.dataset.i));
+  window.scrollTo(0,0);
+}
+function open(i){
+  current=i;redraw=null;stopAudio();renderSteps();
+  const l=LESSONS[i];
+  stage.innerHTML=`<article class="lesson"><div class="kicker">Lesson ${i+1} of ${LESSONS.length}</div><h1>${l.title}</h1><div id="body"></div>
+  <div class="finish"><button class="btn" id="prevBtn" ${i===0?"disabled":""}>Previous lesson</button>
+  ${l.id==="quiz"?"":`<button class="btn sun" id="doneBtn">${state.done.includes(l.id)?"Next lesson":"I've got it, next lesson"}</button>`}</div></article>`;
+  RENDER[l.id]($("#body"));
+  $("#prevBtn").onclick=()=>i>0&&open(i-1);
+  const d=$("#doneBtn");if(d)d.onclick=()=>{complete(l.id);open(i+1)};
+  window.scrollTo(0,0);
+}
+
+/* ---------- helper: canvas ---------- */
+function setupCanvas(cv){
+  const r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+  cv.width=r.width*dpr;cv.height=r.height*dpr;const ctx=cv.getContext("2d");ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {ctx,w:r.width,h:r.height};
+}
+function hexA(hex,a){const h=hex.replace("#","");const n=parseInt(h,16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`}
+
+const RENDER={};
+
+/* ===== 1. What is AI ===== */
+RENDER.what=el=>{
+  const items=[
+   ["🧮","A calculator doing 245 × 19",false,"Not AI. It follows fixed rules written by a programmer. It never learns from examples."],
+   ["🗺️","Google Maps warning of traffic on Third Mainland Bridge",true,"AI. It learns traffic patterns from millions of phones and predicts delays."],
+   ["📧","Gmail moving a 'You have won $1,000,000' email to spam",true,"AI. It learned what scam emails look like from millions of examples."],
+   ["💡","A light that turns on when you flip the switch",false,"Not AI. It is a simple circuit. There is no learning or decision."],
+   ["🤳","Your phone unlocking when it sees your face",true,"AI. It learned the pattern of your face and checks for a match."],
+   ["⏰","An alarm that rings at 6:00am every day",false,"Not AI. It only follows a timer you set."],
+   ["🎵","Boomplay or YouTube suggesting songs you might like",true,"AI. It finds patterns in what you and similar listeners enjoy."],
+   ["🗣️","A chatbot answering your homework question",true,"AI. It learned language patterns from huge amounts of text."]
+  ];
+  let answered=0,correct=0;
+  el.innerHTML=`<p class="intro"><b>Artificial Intelligence (AI)</b> is when a computer does something that normally needs human thinking: recognising faces, understanding language, making predictions or decisions.</p>
+  <p>The big difference: normal programs follow rules a person wrote, step by step. AI systems <b>learn patterns from examples (data)</b> and use those patterns on things they have never seen before.</p>
+  <div class="note"><p>Think of how you learned to recognise a mango. Nobody gave you a rulebook. You saw many mangoes, and your brain found the pattern. AI learns in a similar way.</p></div>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>AI or not AI?</h2><p>Decide for each one. Tap your answer to see why.</p>
+  <div class="sort-grid">${items.map((it,i)=>`<div class="sort-card" data-i="${i}"><div class="emoji" aria-hidden="true">${it[0]}</div><h3>${it[1]}</h3><div class="row"><button class="btn small" data-a="1">AI</button><button class="btn small" data-a="0">Not AI</button></div><div class="why">${it[3]}</div></div>`).join("")}</div>
+  <p id="score" class="axis" style="margin-top:12px">0 of ${items.length} answered</p></section>`;
+  el.querySelectorAll(".sort-card").forEach(c=>c.querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    if(c.classList.contains("right")||c.classList.contains("wrong"))return;
+    const it=items[+c.dataset.i],ok=(b.dataset.a==="1")===it[2];
+    c.classList.add(ok?"right":"wrong");answered++;if(ok)correct++;
+    c.querySelector(".why").innerHTML=(ok?"<b>Correct.</b> ":"<b>Not quite.</b> ")+it[3];
+    $("#score").textContent=`${answered} of ${items.length} answered · ${correct} correct`;
+    if(answered===items.length)award("what",30,"All sorted");
+  }));
+};
+
+/* ===== 2. Pixels ===== */
+RENDER.pixels=el=>{
+  el.innerHTML=`<p class="intro">A computer cannot "see" like you. To a computer, every picture is a grid of tiny squares called <b>pixels</b>, and every pixel is just a number.</p>
+  <p>In a black-and-white picture, an empty pixel is <b>0</b> and a filled one is <b>1</b>. A phone photo has millions of pixels, and each one has three numbers for red, green and blue.</p>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>Draw and see the numbers</h2>
+  <p>Click or drag on the grid to draw. Try drawing an <b>X</b> or an <b>O</b>, then ask the computer to guess.</p>
+  <div class="pix-wrap"><div><div class="pix" id="pix" role="grid" aria-label="Drawing grid"></div>
+  <div class="row" style="margin-top:10px"><button class="btn small" id="clearPix">Clear</button><button class="btn small sun" id="guessPix">Guess my drawing</button></div></div>
+  <div><p class="axis" style="margin-bottom:6px">What the computer sees:</p><div class="matrix" id="matrix"></div>
+  <p style="margin-top:14px" class="axis">Computer's guess:</p><div class="guess" id="guessOut">Draw something first</div><p class="axis" id="guessWhy"></p></div></div></section>
+  <div class="note"><p><b>How did it guess?</b> It compared your drawing, number by number, to example patterns of X and O it already knows, and picked the closest match. Real image AI does the same idea with millions of examples and far smarter maths.</p></div>`;
+  const N=10,g=Array(N*N).fill(0),pix=$("#pix");
+  pix.innerHTML=g.map((_,i)=>`<div data-i="${i}"></div>`).join("");
+  const cells=[...pix.children];let drawing=false,mode=1;
+  function paint(i){if(i==null)return;g[i]=mode;cells[i].classList.toggle("on",!!mode);showM()}
+  function idxAt(e){const r=pix.getBoundingClientRect();const x=Math.floor((e.clientX-r.left)/r.width*N),y=Math.floor((e.clientY-r.top)/r.height*N);return x>=0&&x<N&&y>=0&&y<N?y*N+x:null}
+  pix.onpointerdown=e=>{drawing=true;pix.setPointerCapture(e.pointerId);const i=idxAt(e);mode=g[i]?0:1;paint(i)};
+  pix.onpointermove=e=>{if(drawing)paint(idxAt(e))};
+  pix.onpointerup=()=>drawing=false;
+  function showM(){let s="";for(let y=0;y<N;y++){s+=g.slice(y*N,y*N+N).map(v=>v?"<b>1</b>":"0").join(" ")+"<br>"}$("#matrix").innerHTML=s}
+  showM();
+  const tpl={X:[],O:[]};
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    tpl.X.push(Math.abs(x-y)<=1||Math.abs(x+y-(N-1))<=1?1:0);
+    const d=Math.hypot(x-4.5,y-4.5);tpl.O.push(d>2.6&&d<4.9?1:0);
+  }
+  function score(t){let inter=0,uni=0;for(let i=0;i<N*N;i++){if(g[i]&&t[i])inter++;if(g[i]||t[i])uni++}return uni?inter/uni:0}
+  $("#guessPix").onclick=()=>{
+    const filled=g.reduce((a,b)=>a+b,0);
+    if(filled<4){$("#guessOut").textContent="Draw a bit more";return}
+    const sx=score(tpl.X),so=score(tpl.O),best=sx>so?"X":"O",conf=Math.max(sx,so);
+    $("#guessOut").textContent=conf<0.18?"Not sure 🤔":`It looks like ${best === "X" ? "an X" : "an O"}`;
+    $("#guessWhy").textContent=`Match with X: ${Math.round(sx*100)}% · Match with O: ${Math.round(so*100)}%`;
+    award("pixels",30,"Your first AI guess");
+  };
+  $("#clearPix").onclick=()=>{g.fill(0);cells.forEach(c=>c.classList.remove("on"));showM();$("#guessOut").textContent="Draw something first";$("#guessWhy").textContent=""};
+};
+
+/* ===== 3. Teach a machine (KNN) ===== */
+RENDER.teach=el=>{
+  el.innerHTML=`<p class="intro">One of the simplest kinds of AI learns by <b>looking at its neighbours</b>. You give it labelled examples, and when it sees something new, it asks: "Which examples is this closest to?"</p>
+  <p>Below, each dot is a student. Across is hours of study per day, and up is hours of sleep per night. Green students passed WAEC maths, coral students did not. This is <b>training data</b>.</p>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>Train the predictor</h2>
+  <p>Choose a label and click the chart to add students. The shaded areas show what the AI would predict for a new student there. Then switch to "Test a new student".</p>
+  <div class="row" style="margin-bottom:10px"><button class="btn small" id="mA" aria-pressed="true">Add: passed</button><button class="btn small" id="mB" aria-pressed="false">Add: did not pass</button><button class="btn small" id="mT" aria-pressed="false">Test a new student</button><button class="btn small" id="reset">Clear all</button><button class="btn small" id="sample">Load sample class</button></div>
+  <div class="canvas-box"><canvas id="cv"></canvas></div>
+  <div class="row" style="justify-content:space-between;margin-top:6px"><span class="axis">← less study · study hours · more study →</span><span class="axis">↑ more sleep</span></div>
+  <div class="slider-row" style="margin-top:14px"><label for="k">Neighbours to ask (k)</label><output id="kOut">3</output><input type="range" id="k" min="1" max="9" step="2" value="3"></div>
+  <p id="testOut" class="stat" aria-live="polite"></p>
+  <div class="legend"><span><i class="dot" style="background:var(--green)"></i>Passed</span><span><i class="dot" style="background:var(--coral)"></i>Did not pass</span><span><i class="dot" style="background:var(--sun)"></i>New student</span></div></section>
+  <div class="note"><p><b>Try this:</b> set k to 1, then add one wrong dot in the middle of the green area. See how a single bad example confuses the AI? Now raise k to 7. Asking more neighbours makes the AI less easily fooled. Choosing settings like k is a real job for AI engineers.</p></div>`;
+  let pts=[],mode="A",test=null;
+  const cv=$("#cv");
+  function sample(){pts=[];for(let i=0;i<34;i++){const x=Math.random(),y=Math.random();const s=x*0.65+y*0.45+(Math.random()-.5)*.22;pts.push({x,y,c:s>0.55?"A":"B"})}}
+  sample();
+  function knn(x,y){const k=+$("#k").value;if(!pts.length)return null;const d=pts.map(p=>({c:p.c,d:(p.x-x)**2+(p.y-y)**2})).sort((a,b)=>a.d-b.d).slice(0,k);const a=d.filter(p=>p.c==="A").length;return{c:a>d.length/2?"A":"B",a,n:d.length,near:d}}
+  function draw(){
+    const {ctx,w,h}=setupCanvas(cv);const G=css("--green"),C=css("--coral"),I=css("--ink");
+    ctx.clearRect(0,0,w,h);
+    if(pts.length){const s=12;for(let px=0;px<w;px+=s)for(let py=0;py<h;py+=s){const r=knn((px+s/2)/w,1-(py+s/2)/h);ctx.fillStyle=hexA(r.c==="A"?G:C,.16);ctx.fillRect(px,py,s,s)}}
+    if(test){const r=knn(test.x,test.y);if(r){const nearPts=pts.map(p=>({p,d:(p.x-test.x)**2+(p.y-test.y)**2})).sort((a,b)=>a.d-b.d).slice(0,+$("#k").value);ctx.strokeStyle=I;ctx.setLineDash([4,4]);ctx.lineWidth=1.5;nearPts.forEach(n=>{ctx.beginPath();ctx.moveTo(test.x*w,(1-test.y)*h);ctx.lineTo(n.p.x*w,(1-n.p.y)*h);ctx.stroke()});ctx.setLineDash([])}}
+    pts.forEach(p=>{ctx.beginPath();ctx.arc(p.x*w,(1-p.y)*h,7,0,7);ctx.fillStyle=p.c==="A"?G:C;ctx.fill();ctx.lineWidth=2;ctx.strokeStyle=I;ctx.stroke()});
+    if(test){ctx.beginPath();ctx.arc(test.x*w,(1-test.y)*h,10,0,7);ctx.fillStyle=css("--sun");ctx.fill();ctx.lineWidth=3;ctx.strokeStyle=I;ctx.stroke()}
+  }
+  redraw=draw;
+  function setMode(m){mode=m;["A","B","T"].forEach(x=>$("#m"+x).setAttribute("aria-pressed",x===m))}
+  $("#mA").onclick=()=>setMode("A");$("#mB").onclick=()=>setMode("B");$("#mT").onclick=()=>setMode("T");
+  $("#reset").onclick=()=>{pts=[];test=null;$("#testOut").textContent="";draw()};
+  $("#sample").onclick=()=>{sample();test=null;$("#testOut").textContent="";draw()};
+  function showTest(){if(!test)return;const r=knn(test.x,test.y);if(!r){$("#testOut").textContent="Add some training students first";return}$("#testOut").textContent=`Prediction: ${r.c==="A"?"will likely pass ✅":"at risk of failing ⚠️"} (${r.a} of ${r.n} neighbours passed)`}
+  $("#k").oninput=e=>{$("#kOut").textContent=e.target.value;draw();showTest()};
+  cv.onpointerdown=e=>{const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=1-(e.clientY-r.top)/r.height;
+    if(mode==="T"){test={x,y};showTest();award("teach",30,"First prediction")}else{pts.push({x,y,c:mode});showTest()}draw()};
+  requestAnimationFrame(draw);window.addEventListener("resize",()=>redraw===draw&&draw());
+};
+
+/* ===== 4. Neuron ===== */
+RENDER.neuron=el=>{
+  el.innerHTML=`<p class="intro">Big AI systems like chatbots are built from millions of tiny maths units called <b>artificial neurons</b>. Each one does something very simple: it takes some inputs, decides how much each one matters, adds them up and makes a decision.</p>
+  <p>How much an input matters is called its <b>weight</b>. A big positive weight means "this pushes me towards yes". A negative weight means "this pushes me towards no". The <b>bias</b> is the neuron's mood before it hears anything: positive is eager, negative is reluctant.</p>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>Should Tunde go to football practice?</h2>
+  <div class="neuron-grid"><div>
+    <p class="axis" style="margin-bottom:6px">Inputs (today's situation)</p>
+    <label class="toggle"><input type="checkbox" id="i0"> It is raining</label>
+    <label class="toggle"><input type="checkbox" id="i1" checked> Homework is done</label>
+    <label class="toggle"><input type="checkbox" id="i2" checked> Friends are going</label>
+    <svg id="nsvg" viewBox="0 0 320 200" style="width:100%;margin-top:6px" role="img" aria-label="Neuron diagram showing inputs connected to a neuron, line thickness shows weight"></svg>
+  </div><div>
+    <p class="axis" style="margin-bottom:6px">Weights (how much each matters)</p>
+    <div class="slider-row"><label for="w0">Rain</label><output id="o0"></output><input type="range" id="w0" min="-5" max="5" step="0.5" value="-3"></div>
+    <div class="slider-row"><label for="w1">Homework done</label><output id="o1"></output><input type="range" id="w1" min="-5" max="5" step="0.5" value="2"></div>
+    <div class="slider-row"><label for="w2">Friends going</label><output id="o2"></output><input type="range" id="w2" min="-5" max="5" step="0.5" value="1"></div>
+    <div class="slider-row"><label for="b">Bias (mood)</label><output id="ob"></output><input type="range" id="b" min="-5" max="5" step="0.5" value="-1"></div>
+    <div class="decision" id="dec"></div><p class="axis" id="maths" style="margin-top:8px"></p>
+  </div></div></section>
+  <section class="lab"><span class="lab-tag">Challenge</span><h2>Make the neuron a sensible parent</h2>
+  <p>Tunde's mum's rule: <b>he goes only if his homework is done and it is not raining.</b> Friends do not matter. Adjust the weights and bias until every row below shows a tick.</p>
+  <div class="table-scroll"><table class="truth" id="truth"></table></div><p id="chal" class="stat" style="margin-top:10px"></p></section>
+  <div class="note"><p>You just did by hand what AI training does automatically: adjusting weights until the answers come out right. A chatbot has billions of weights, so no human could set them. In the next lesson, you will watch a computer find the weights by itself.</p></div>`;
+  const sig=z=>1/(1+Math.exp(-z));
+  function upd(){
+    const w=[+$("#w0").value,+$("#w1").value,+$("#w2").value],b=+$("#b").value,x=[$("#i0").checked?1:0,$("#i1").checked?1:0,$("#i2").checked?1:0];
+    ["o0","o1","o2"].forEach((o,i)=>$("#"+o).textContent=(w[i]>0?"+":"")+w[i]);$("#ob").textContent=(b>0?"+":"")+b;
+    const z=w[0]*x[0]+w[1]*x[1]+w[2]*x[2]+b,p=sig(z);
+    const go=p>=.5,d=$("#dec");d.textContent=go?"GO ⚽":"STAY HOME 🏠";d.style.background=go?"var(--green-soft)":"var(--coral-soft)";
+    $("#maths").textContent=`Score = (${w[0]}×${x[0]}) + (${w[1]}×${x[1]}) + (${w[2]}×${x[2]}) + ${b} = ${z.toFixed(1)} → ${Math.round(p*100)}% sure to go`;
+    const I=css("--ink"),G=css("--green"),C=css("--coral");
+    const ys=[40,100,160],names=["Rain","Homework","Friends"];
+    let s="";ys.forEach((y,i)=>{s+=`<line x1="70" y1="${y}" x2="230" y2="100" stroke="${w[i]>=0?G:C}" stroke-width="${1+Math.abs(w[i])*1.6}" opacity="${x[i]?1:.25}" stroke-linecap="round"/><circle cx="50" cy="${y}" r="20" fill="${x[i]?css("--sun"):css("--card")}" stroke="${I}" stroke-width="2.5"/><text x="50" y="${y+5}" text-anchor="middle" font-size="13" font-weight="700" fill="#172554">${x[i]}</text><text x="50" y="${y+36}" text-anchor="middle" font-size="11" fill="${I}">${names[i]}</text>`});
+    s+=`<circle cx="250" cy="100" r="34" fill="${go?G:C}" stroke="${I}" stroke-width="3"/><text x="250" y="106" text-anchor="middle" font-size="16" font-weight="700" fill="#fff">${Math.round(p*100)}%</text>`;
+    $("#nsvg").innerHTML=s;
+    let rows="<tr><th>Rain</th><th>Homework</th><th>Friends</th><th>Mum says</th><th>Neuron says</th><th></th></tr>",good=0;
+    for(let r=0;r<8;r++){const a=[r>>2&1,r>>1&1,r&1],want=!a[0]&&a[1],got=sig(w[0]*a[0]+w[1]*a[1]+w[2]*a[2]+b)>=.5,ok=want===got;if(ok)good++;
+      rows+=`<tr><td>${a[0]?"Yes":"No"}</td><td>${a[1]?"Yes":"No"}</td><td>${a[2]?"Yes":"No"}</td><td>${want?"Go":"Stay"}</td><td>${got?"Go":"Stay"}</td><td class="${ok?"ok":"bad"}">${ok?"✓":"✗"}</td></tr>`}
+    $("#truth").innerHTML=rows;$("#chal").textContent=good===8?"🎉 Perfect! Your neuron follows Mum's rule.":`${good} of 8 correct`;
+    if(good===8)award("neuron",40,"Neuron challenge solved");
+  }
+  el.querySelectorAll("input").forEach(i=>i.oninput=upd);upd();redraw=upd;
+};
+
+/* ===== 5. How machines learn (perceptron) ===== */
+RENDER.learn=el=>{
+  el.innerHTML=`<p class="intro">Training an AI means letting it <b>guess, check and adjust</b>, over and over. Each wrong answer nudges its weights a little so the next guess is better.</p>
+  <p>Here, the computer must draw a line that separates ripe mangoes 🥭 (green) from unripe ones (coral), using softness and sweetness. It starts with a random line. Every time it gets a mango wrong, it shifts the line a little.</p>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>Watch it learn</h2>
+  <div class="row" style="margin-bottom:10px"><button class="btn small sun" id="step">Learn from 1 mango</button><button class="btn small primary" id="auto">Auto-train</button><button class="btn small" id="shuffle">New random line</button><button class="btn small" id="newData">New mangoes</button></div>
+  <div class="canvas-box"><canvas id="cv2"></canvas></div>
+  <div class="row" style="justify-content:space-between;margin-top:6px"><span class="axis">← harder · softness · softer →</span><span class="axis">↑ sweeter</span></div>
+  <div class="row" style="gap:28px;margin-top:12px"><div><div class="axis">Mistakes</div><div class="stat" id="err"></div></div><div><div class="axis">Training steps</div><div class="stat" id="steps2">0</div></div><div><div class="axis">Accuracy</div><div class="stat" id="acc"></div></div></div>
+  <p id="learnMsg" aria-live="polite"></p>
+  <div class="slider-row"><label for="lr">Learning rate (how big each nudge is)</label><output id="lrOut">0.10</output><input type="range" id="lr" min="0.01" max="1" step="0.01" value="0.1"></div></section>
+  <div class="note"><p><b>Try this:</b> push the learning rate to 1 and auto-train. The line jumps around wildly. Set it very low and learning is slow. Picking a good learning rate is one of the skills of training real AI models.</p></div>`;
+  let pts=[],w,steps=0,timer=null,last=null;
+  const cv=$("#cv2");
+  function data(){pts=[];for(let i=0;i<40;i++){let x,y,s;do{x=Math.random();y=Math.random();s=x+y-1+(Math.random()-.5)*.1}while(Math.abs(s)<.08);pts.push({x,y,c:s>0?1:-1})}}
+  function rnd(){w=[Math.random()*2-1,Math.random()*2-1,Math.random()*2-1];steps=0}
+  data();rnd();
+  const pred=p=>w[0]*p.x+w[1]*p.y+w[2]>0?1:-1;
+  function stats(){const e=pts.filter(p=>pred(p)!==p.c).length;$("#err").textContent=e;$("#acc").textContent=Math.round((1-e/pts.length)*100)+"%";$("#steps2").textContent=steps;return e}
+  function draw(){
+    const {ctx,w:W,h:H}=setupCanvas(cv),G=css("--green"),C=css("--coral"),I=css("--ink");ctx.clearRect(0,0,W,H);
+    const s=14;for(let px=0;px<W;px+=s)for(let py=0;py<H;py+=s){const v=pred({x:(px+s/2)/W,y:1-(py+s/2)/H});ctx.fillStyle=hexA(v>0?G:C,.12);ctx.fillRect(px,py,s,s)}
+    if(Math.abs(w[1])>1e-6){ctx.beginPath();ctx.strokeStyle=I;ctx.lineWidth=3;const y0=-(w[2])/w[1],y1=-(w[0]+w[2])/w[1];ctx.moveTo(0,(1-y0)*H);ctx.lineTo(W,(1-y1)*H);ctx.stroke()}
+    pts.forEach(p=>{const wrong=pred(p)!==p.c;ctx.beginPath();ctx.arc(p.x*W,(1-p.y)*H,7,0,7);ctx.fillStyle=p.c>0?G:C;ctx.fill();ctx.lineWidth=wrong?3.5:1.5;ctx.strokeStyle=I;ctx.stroke();if(wrong){ctx.beginPath();ctx.arc(p.x*W,(1-p.y)*H,12,0,7);ctx.lineWidth=2;ctx.strokeStyle=css("--sun");ctx.stroke()}});
+    if(last){ctx.beginPath();ctx.arc(last.x*W,(1-last.y)*H,16,0,7);ctx.lineWidth=3;ctx.strokeStyle=css("--blue");ctx.stroke()}
+    stats();
+  }
+  redraw=draw;
+  function step(){
+    const wrong=pts.filter(p=>pred(p)!==p.c);
+    if(!wrong.length){stop();last=null;draw();$("#learnMsg").innerHTML=`<b>Done!</b> The computer found a line that separates every mango in ${steps} steps. Nobody told it where the line goes. It learned from its mistakes.`;award("learn",40,"Model trained");return false}
+    const p=wrong[Math.floor(Math.random()*wrong.length)],lr=+$("#lr").value;
+    w[0]+=lr*p.c*p.x;w[1]+=lr*p.c*p.y;w[2]+=lr*p.c;steps++;last=p;
+    $("#learnMsg").textContent=`It got a ${p.c>0?"ripe":"unripe"} mango wrong (circled in blue), so it nudged the line towards fixing it.`;
+    draw();return true;
+  }
+  function stop(){clearInterval(timer);timer=null;$("#auto").textContent="Auto-train"}
+  $("#step").onclick=()=>{stop();step()};
+  $("#auto").onclick=()=>{if(timer){stop();return}$("#auto").textContent="Pause";timer=setInterval(()=>{if(!step())stop()},180)};
+  $("#shuffle").onclick=()=>{stop();rnd();last=null;$("#learnMsg").textContent="";draw()};
+  $("#newData").onclick=()=>{stop();data();rnd();last=null;$("#learnMsg").textContent="";draw()};
+  $("#lr").oninput=e=>$("#lrOut").textContent=(+e.target.value).toFixed(2);
+  requestAnimationFrame(draw);
+};
+
+/* ===== 6. Words ===== */
+RENDER.words=el=>{
+  const base=`I love jollof rice. I love my school. My school is in Abuja. My mother cooks jollof rice on Sunday. On Sunday we go to church. We go to school on Monday. My friend loves football. My friend plays football after school. After school I read my books. I read my books every night. Every night my mother tells stories. My teacher is very kind. My teacher teaches mathematics. Mathematics is my best subject. My best friend is Chioma. Chioma loves mathematics. We play football on Saturday. On Saturday my father buys suya. Suya is very spicy. Jollof rice is very sweet. The market is very busy. My mother goes to the market. The rain is falling. The rain stopped after school. I love football. I love suya.`;
+  el.innerHTML=`<p class="intro">Chatbots like ChatGPT and Claude work by <b>predicting the next word</b>, one word at a time. They learned which words usually follow which, by reading enormous amounts of text.</p>
+  <p>Below is a tiny version. It has read a few short sentences and counted which word comes after each word. That count is its whole "brain".</p>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>Next-word predictor</h2>
+  <div class="row"><label for="word" class="axis">Type a word:</label><input type="text" id="word" value="my" style="flex:1;max-width:240px" autocomplete="off"><button class="btn small" id="predict">Predict next word</button></div>
+  <div class="bars" id="bars" aria-live="polite"></div>
+  <p class="axis">Tap a predicted word to add it and keep going.</p>
+  <div class="sentence" id="sentence">my</div>
+  <div class="row" style="margin-top:10px"><button class="btn small sun" id="gen">Let it write a sentence</button><button class="btn small" id="clearS">Start over</button></div></section>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>Change what it learns from</h2>
+  <p>This is its training data. Add your own sentences (about your town, your school, your favourite food) and press Retrain. Watch how its predictions change.</p>
+  <textarea id="corpus">${base}</textarea>
+  <div class="row" style="margin-top:8px"><button class="btn small primary" id="retrain">Retrain</button><span class="axis" id="cinfo"></span></div></section>
+  <div class="note"><p>Notice that the predictor only knows what it has read. If its text says suya is spicy, it will say suya is spicy. Real chatbots read billions of pages, so they sound smart, but they can still repeat mistakes from their data or confidently make things up. Always double-check AI answers for schoolwork.</p></div>`;
+  let model={};
+  function train(){model={};const t=$("#corpus").value.toLowerCase().replace(/[^a-z'\s.]/g," ").replace(/\./g," . ").split(/\s+/).filter(Boolean);
+    for(let i=0;i<t.length-1;i++){if(t[i]===".")continue;(model[t[i]]??={});model[t[i]][t[i+1]]=(model[t[i]][t[i+1]]||0)+1}
+    $("#cinfo").textContent=`Learned from ${t.filter(x=>x!==".").length} words, ${Object.keys(model).length} different words known.`}
+  function nexts(w){const m=model[w];if(!m)return[];const tot=Object.values(m).reduce((a,b)=>a+b,0);return Object.entries(m).map(([k,v])=>({k,p:v/tot})).sort((a,b)=>b.p-a.p)}
+  function show(){const words=$("#sentence").textContent.trim().split(/\s+/);const w=($("#word").value.trim().toLowerCase().split(/\s+/).pop())||words[words.length-1];
+    const n=nexts(w).slice(0,6);
+    $("#bars").innerHTML=n.length?n.map(o=>`<div class="bar-row"><span><button data-w="${o.k}">${o.k==="."?"(end)":o.k}</button></span><span class="bar-track"><span class="bar" style="display:block;width:${o.p*100}%"></span></span><span>${Math.round(o.p*100)}%</span></div>`).join(""):`<p>It has never seen "<b>${w}</b>" in its training text, so it has no idea what comes next. Teach it below.</p>`;
+    $("#bars").querySelectorAll("button").forEach(b=>b.onclick=()=>add(b.dataset.w));award("words",30,"Predicted a word")}
+  function add(w){if(w==="."){$("#sentence").textContent+=".";$("#bars").innerHTML="<p>Sentence finished.</p>";return}$("#sentence").textContent+=" "+w;$("#word").value=w;show()}
+  function pick(w){const n=nexts(w);if(!n.length)return null;let r=Math.random();for(const o of n){r-=o.p;if(r<=0)return o.k}return n[0].k}
+  $("#predict").onclick=()=>{const w=$("#word").value.trim().toLowerCase();if(w){$("#sentence").textContent=w}show()};
+  $("#word").onkeydown=e=>{if(e.key==="Enter")$("#predict").click()};
+  $("#gen").onclick=()=>{let w=$("#word").value.trim().toLowerCase()||"my";const out=[w];for(let i=0;i<14;i++){const n=pick(w);if(!n||n===".")break;out.push(n);w=n}$("#sentence").textContent=out.join(" ")+".";award("wordsgen",20,"AI wrote a sentence")};
+  $("#clearS").onclick=()=>{$("#word").value="my";$("#sentence").textContent="my";show()};
+  $("#retrain").onclick=()=>{train();show();toast("Retrained on your text")};
+  train();show();
+};
+
+/* ===== 7. Fairness ===== */
+RENDER.fair=el=>{
+  el.innerHTML=`<p class="intro">AI learns from data, so if the data is unfair or one-sided, the AI becomes unfair too. This is called <b>bias</b>. It is one of the biggest problems in AI today.</p>
+  <section class="lab"><span class="lab-tag">Simulation</span><h2>The scholarship AI</h2>
+  <p>A company builds an AI to pick students for a scholarship. It learns from records of past students. But most records come from schools in big cities. What happens to students from rural schools?</p>
+  <div class="slider-row"><label for="mix">Share of training records from city schools</label><output id="mixOut"></output><input type="range" id="mix" min="50" max="98" value="90"></div>
+  <div class="groups"><div class="group"><h3>🏙️ City students</h3><div class="axis">How often the AI judges them correctly</div><div class="meter"><i id="mCity"></i></div><div class="stat" id="tCity"></div></div>
+  <div class="group"><h3>🌾 Rural students</h3><div class="axis">How often the AI judges them correctly</div><div class="meter"><i id="mRural"></i></div><div class="stat" id="tRural"></div></div></div>
+  <p id="fairMsg" style="margin-top:12px" aria-live="polite"></p>
+  <p class="axis">This is a simplified simulation to show the idea, not real figures.</p></section>
+  <section class="lab"><span class="lab-tag">Think about it</span><h2>What would you do?</h2><div id="scen"></div></section>`;
+  function upd(){const m=+$("#mix").value/100;$("#mixOut").textContent=Math.round(m*100)+"%";
+    const city=Math.round(78+16*m),rural=Math.round(92-62*(m-.5));
+    const set=(id,v)=>{$("#m"+id).style.width=v+"%";$("#m"+id).style.background=v>=80?"var(--green)":v>=65?"var(--sun)":"var(--coral)";$("#t"+id).textContent=v+"%"};
+    set("City",city);set("Rural",rural);
+    $("#fairMsg").innerHTML=city-rural>12?`<b>Unfair.</b> The AI is wrong about rural students much more often. Brilliant rural students could miss out, not because of their ability but because the AI barely saw anyone like them.`:`<b>Much fairer.</b> With balanced data, the AI works well for both groups. Good AI starts with data that represents everyone.`;
+    if(m<=.6)award("fair",30,"You balanced the data")}
+  $("#mix").oninput=upd;upd();
+  const S=[
+   {q:"Your school wants an AI to mark essays. It was trained only on essays from British students. What is the biggest risk?",o:[["It may mark down good essays that use Nigerian English expressions or local examples.",1,"Right. The AI only learned one style of writing, so different but correct writing could be marked as wrong."],["It will mark too slowly.",0,"Speed is not the issue. The issue is what it learned from."],["There is no risk. AI is always neutral.",0,"AI is only as fair as its data. It is never automatically neutral."]]},
+   {q:"A face-recognition app works well on light-skinned faces but often fails on dark-skinned faces. What most likely went wrong?",o:[["The camera was too cheap.",0,"Cameras can matter, but the main problem found in real studies was the data."],["Its training photos had far fewer dark-skinned faces.",1,"Correct. This really happened with several commercial systems. The fix is more diverse training data and testing on everyone."],["Dark skin is harder for computers to understand.",0,"No. With fair data, the systems improved a lot. The problem was the data, not the people."]]},
+   {q:"You use a chatbot for your Biology assignment, and it gives a confident answer with a source. What should you do?",o:[["Copy it. It sounded very sure.",0,"AI can sound confident and still be wrong, and it can even invent sources."],["Check the facts in your textbook or a trusted source, and write it in your own words.",1,"Exactly. Use AI as a study helper, not as a replacement for your own thinking. Also follow your school's rules on AI use."],["Never use AI for anything.",0,"AI can be a useful helper for explaining and practising. The key is using it honestly and checking its work."]]}
+  ];
+  let got=0;
+  $("#scen").innerHTML=S.map((s,i)=>`<div class="scenario"><b>${s.q}</b><div class="choices">${s.o.map((o,j)=>`<button class="choice" data-s="${i}" data-o="${j}">${o[0]}</button>`).join("")}</div><div class="feedback" id="fb${i}"></div></div>`).join("");
+  $("#scen").querySelectorAll(".choice").forEach(b=>b.onclick=()=>{const s=S[b.dataset.s],o=s.o[b.dataset.o];const box=b.parentElement;if(box.dataset.done)return;
+    b.classList.add(o[1]?"right":"wrong");$("#fb"+b.dataset.s).textContent=o[2];if(o[1]){box.dataset.done=1;got++;if(got===S.length)award("fairs",30,"Ethics thinker")}});
+};
+
+/* ===== 8. Quiz ===== */
+RENDER.quiz=el=>{
+  const Q=[
+   ["What makes AI different from a normal computer program?",["It runs faster","It learns patterns from examples (data)","It uses electricity","It has a screen"],1],
+   ["To a computer, a picture is…",["A painting","A grid of numbers called pixels","A sound","A secret code only humans understand"],1],
+   ["In the 'teach a machine' lesson, the labelled examples we gave the AI are called…",["Training data","Hardware","A virus","An app"],0],
+   ["In an artificial neuron, what does a weight show?",["How heavy the computer is","How much an input matters to the decision","The colour of the output","The battery level"],1],
+   ["How does an AI model improve during training?",["Someone types every answer in","It guesses, checks its mistakes and adjusts its weights","It downloads a new screen","It never improves"],1],
+   ["A chatbot writes sentences by…",["Copying one book","Predicting the next word again and again","Asking a human each time","Choosing random letters"],1],
+   ["An AI trained mostly on city students judges rural students badly. This is an example of…",["Bias from unbalanced data","A fast processor","Good design","Cloud storage"],0],
+   ["What is the wisest way to use AI for schoolwork?",["Copy answers without reading","Use it to understand and practise, then check facts and write in your own words","Trust it because it is always right","Use it to write exams"],1],
+   ["When you co-write a story with AI, who should make the final creative decisions?",["The AI, because it knows more words","You, the creator","Nobody","Whoever types fastest"],1],
+   ["Image AI tools (diffusion models) create a picture by…",["Searching Google and copying a photo","Starting from random noise and removing it step by step, guided by your prompt","Taking a photo with your camera","Drawing with a robot arm"],1],
+   ["Which prompt will most likely give a better result?",["\"Draw something\"","\"A calm blue ocean at night with gold stars and a full moon\"","\"Picture\"","\"Art please\""],1],
+   ["A fake AI video showing a real person saying something they never said is called…",["A deepfake","A selfie","A remix","A meme template"],0]
+  ];
+  const ans={};
+  el.innerHTML=`<p class="intro">Twelve questions on everything you explored, from neurons to music. Score 9 or more to earn your AI Lab certificate.</p>
+  <div id="qs">${Q.map((q,i)=>`<div class="q-card"><h3>${i+1}. ${q[0]}</h3><div class="choices">${q[1].map((o,j)=>`<button class="choice" data-q="${i}" data-o="${j}">${o}</button>`).join("")}</div></div>`).join("")}</div>
+  <div class="row"><button class="btn primary" id="mark">Check my answers</button><span id="qmsg" class="axis"></span></div><div id="result"></div>`;
+  el.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{if(el.dataset.marked)return;const q=b.dataset.q;b.parentElement.querySelectorAll(".choice").forEach(x=>x.setAttribute("aria-pressed","false"));b.setAttribute("aria-pressed","true");b.parentElement.querySelectorAll(".choice").forEach(x=>x.style.borderColor="");b.style.borderColor="var(--ink)";ans[q]=+b.dataset.o});
+  $("#mark").onclick=()=>{
+    if(Object.keys(ans).length<Q.length){$("#qmsg").textContent=`Answer all ${Q.length} questions first (${Object.keys(ans).length} done).`;return}
+    el.dataset.marked=1;let s=0;
+    Q.forEach((q,i)=>{const bs=el.querySelectorAll(`.choice[data-q="${i}"]`);bs[q[2]].classList.add("right");if(ans[i]===q[2])s++;else bs[ans[i]].classList.add("wrong")});
+    $("#qmsg").textContent="";
+    if(s>=9){complete("quiz");award("quizpass",100,"Certificate earned");
+      const saved=store.get("name","");
+      $("#result").innerHTML=`<div class="cert"><p class="axis">AI Lab certificate</p><h2>Well done! You scored ${s} of ${Q.length}</h2><p style="margin:0 auto">This certifies that</p>
+      <div class="name" id="certName">${saved||"Your name"}</div><p style="margin:0 auto 14px">has explored how AI sees, learns and predicts, and has used it responsibly to create stories, pictures, music and ideas.</p>
+      <div class="row" style="justify-content:center"><input type="text" id="nameIn" placeholder="Type your full name" value="${saved}" aria-label="Your name"><button class="btn small sun" id="nameBtn">Add my name</button></div>
+      <p class="axis" style="margin-top:12px">Take a screenshot to show your teacher.</p></div>`;
+      $("#nameBtn").onclick=()=>{const n=$("#nameIn").value.trim();if(n){$("#certName").textContent=n;store.set("name",n)}};
+    }else{
+      $("#result").innerHTML=`<div class="note"><p>You scored <b>${s} of ${Q.length}</b>. The correct answers are shown in green. Revisit the lessons and try again. You need 9 to earn the certificate.</p><button class="btn small" id="retry">Try again</button></div>`;
+      $("#retry").onclick=()=>open(LESSONS.length-1);
+    }
+  };
+};
+
+/* ================= CREATIVE TRACK ================= */
+let AI=null;
+(async()=>{try{if(window.claude&&typeof claude.use==="function"){AI=await claude.use("sample");
+  document.querySelectorAll(".ai-pill").forEach(setPill);if(current===null)home()}}catch(e){AI=null}})();
+function setPill(el){el.classList.toggle("on",!!AI);el.textContent=AI?"🟢 Real AI helper on":"⚪ Offline helper"}
+function pill(){return `<span class="ai-pill">⚪ Offline helper</span>`}
+function lightPills(){document.querySelectorAll(".ai-pill").forEach(setPill)}
+const SAFE=`You are a friendly creative partner for Nigerian secondary school students aged 11 to 17. Keep everything age-appropriate and kind: no romance, no gore, no swearing, no real people. Use simple, vivid English.`;
+function aiErr(e){const c=e&&e.code;return c==="not_granted"?"The AI helper wasn't allowed, so the offline helper took over.":c==="rate_limited"?"The AI helper is busy. Wait a minute and try again.":c==="cancelled"?"Stopped.":"The AI helper couldn't answer, so the offline helper took over."}
+async function askAI(prompt,onText,tier="quick"){if(!AI)throw{code:"unavailable"};const r=await AI(prompt,{modelTier:tier,cache:false,onText:onText?({text})=>onText(text):undefined});return r.text.trim()}
+const pickR=(a,r=Math.random)=>a[Math.floor(r()*a.length)];
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+
+/* ---------- gallery store ---------- */
+function gal(){return store.get("gallery",[])}
+function saveGal(item){const g=gal();g.unshift({...item,id:Date.now(),date:new Date().toLocaleDateString()});
+  try{localStorage.setItem("ailab_gallery",JSON.stringify(g));toast("Saved to your gallery 🖼️");award("gal_"+item.type,20,"First "+item.type+" saved");return true}
+  catch(e){toast("Your gallery is full. Delete something to save more.");return false}}
+$("#galleryBtn").onclick=()=>showGallery();
+function showGallery(){
+  current="gallery";redraw=null;stopAudio();renderSteps();
+  const g=gal();
+  stage.innerHTML=`<article class="lesson"><h1>My gallery</h1><p class="intro">Everything you create in the studios lands here. It is saved on this device only.</p>
+  ${g.length?"":`<div class="note"><p>Nothing here yet. Head to a studio and make your first creation.</p><button class="btn small sun" id="goStudio">Open Story studio</button></div>`}
+  <div class="gal">${g.map(it=>`<div class="gal-item" data-id="${it.id}">
+   ${it.type==="picture"?`<img src="${it.data}" alt="${esc(it.title)}">`:""}
+   <div class="gi"><div class="axis">${{story:"📖 Story",picture:"🎨 Picture",song:"🎵 Song",idea:"💡 Idea",game:"🎮 Startup report"}[it.type]} · ${it.date}</div><h3>${esc(it.title)}</h3>
+   ${it.type==="story"?`<p>${esc(it.data)}</p>`:""}
+   ${it.type==="idea"||it.type==="game"?`<p>${esc(it.data)}</p>`:""}
+   ${it.type==="song"?`<div class="mini-roll">${it.data.mel.map((r,i)=>r<0?"<span></span>":`<i style="grid-column:${i+1};margin-top:${r*5}px;height:8px"></i>`).join("")}</div>${it.data.lyrics?`<p>${esc(it.data.lyrics)}</p>`:""}<button class="btn small" data-play="${it.id}">▶ Play</button>`:""}
+   <div class="row" style="margin-top:auto"><button class="btn small" data-del="${it.id}">Delete</button></div></div></div>`).join("")}</div></article>`;
+  const gs=$("#goStudio");if(gs)gs.onclick=()=>open(LESSONS.findIndex(l=>l.id==="story"));
+  stage.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{store.set("gallery",gal().filter(x=>x.id!=+b.dataset.del));showGallery()});
+  stage.querySelectorAll("[data-play]").forEach(b=>b.onclick=()=>{const it=gal().find(x=>x.id==+b.dataset.play);if(Player.playing){stopAudio();b.textContent="▶ Play";return}
+    Player.load(it.data);Player.start(null);b.textContent="■ Stop"});
+  window.scrollTo(0,0);
+}
+
+/* ================= STORY STUDIO ================= */
+RENDER.story=el=>{
+  const HEROES=["a girl from Kano who builds robots from scrap","a talking agama lizard with big dreams","a shy drummer from Calabar","twin detectives from Ibadan","a grandmother who was once a fighter pilot","a robot that wants to learn Yoruba","a boy who can hear what plants are thinking","the newest prefect at a boarding school in Enugu"];
+  const PLACES=["a busy Lagos market","a floating school in Makoko","the misty top of Obudu mountain","a secret lab beneath the Jos plateau","a space station called Zuma One","a quiet village beside the River Niger","an old library in Zaria","a bus stuck in Third Mainland Bridge traffic"];
+  const PROBLEMS=["the town's water has turned purple","every phone in the city stops working at once","a mysterious drumbeat echoes every midnight","the exam papers have vanished the night before WAEC","a mango tree starts asking for help","the generator for the whole street has disappeared","the moon has started to flicker like bad NEPA light","a parrot keeps repeating a secret code"];
+  const GENRES=["Adventure","Mystery","Comedy","Sci-fi","Folktale"],TONES=["Funny","Spooky","Hopeful","Exciting"];
+  let dice=[pickR(HEROES),pickR(PLACES),pickR(PROBLEMS)],locked=[false,false,false],genre="Adventure",tone="Exciting",parts=[],busy=false,ctl=null;
+  el.innerHTML=`<p class="intro">Writers have always used tools to spark ideas: story prompts, writing games, a friend who asks "what happens next?" AI can be that friend. <b>But you are the author.</b> You choose the characters, steer the plot and decide what stays.</p>
+  <section class="lab"><span class="lab-tag">Step 1</span><h2>Roll the story dice</h2><p>Lock any dice you like, then roll the rest.</p>
+  <div class="reels">${["Hero","Place","Problem"].map((n,i)=>`<div class="reel" id="r${i}"><small>${n}</small><div class="face"></div><button class="lock" data-l="${i}">Lock</button></div>`).join("")}</div>
+  <div class="row"><button class="btn sun" id="roll">🎲 Roll the dice</button></div>
+  <h3 style="margin-top:18px;font-size:1.05rem">Genre</h3><div class="chips" id="genre">${GENRES.map(g=>`<button class="chip" aria-pressed="${g===genre}">${g}</button>`).join("")}</div>
+  <h3 style="margin-top:12px;font-size:1.05rem">Tone</h3><div class="chips" id="tone">${TONES.map(g=>`<button class="chip" aria-pressed="${g===tone}">${g}</button>`).join("")}</div></section>
+  <section class="lab"><span class="lab-tag">Step 2</span><h2>See your prompt</h2>
+  <p>A <b>prompt</b> is the instruction you give an AI. Every choice above changes it. Specific prompts get better stories.</p>
+  <div class="prompt-box" id="pbox"></div></section>
+  <section class="lab"><span class="lab-tag">Step 3</span><h2>Write together</h2><div class="row" style="justify-content:space-between">${pill()}<span class="axis" id="wc"></span></div>
+  <div class="axis" style="margin-top:10px">Whose voice is in this story?</div>
+  <div class="voice" aria-hidden="true"><i id="vMe" style="background:var(--sun);width:50%"></i><i id="vAi" style="background:var(--blue);width:50%"></i></div>
+  <div class="legend"><span><i class="dot" style="background:var(--sun)"></i>You</span><span><i class="dot" style="background:var(--blue)"></i>AI</span></div>
+  <div class="story" id="story"></div>
+  <div class="row"><button class="btn primary" id="open">✨ AI writes the opening</button></div>
+  <label for="mine" style="display:block;margin-top:16px;font-weight:700">Your turn: what happens next?</label>
+  <textarea id="mine" placeholder="Write a sentence or two. Bring in a new character, a clue, a joke…"></textarea>
+  <div class="row" style="margin-top:8px"><button class="btn sun" id="addMine">Add my part</button></div>
+  <p class="axis" style="margin:14px 0 6px">Ask the AI to:</p>
+  <div class="chips" id="moves"><button class="chip" data-m="continue">Continue</button><button class="chip" data-m="twist">Add a twist</button><button class="chip" data-m="dialogue">Add dialogue</button><button class="chip" data-m="funny">Make it funnier</button><button class="chip" data-m="ending">Write the ending</button></div>
+  <p class="status" id="sstat" aria-live="polite"></p>
+  <div class="row"><button class="btn" id="stopS" hidden>Stop</button><button class="btn" id="undo">Remove last part</button><button class="btn sun" id="saveS">Save story to gallery</button></div></section>
+  <div class="note"><p><b>Notice:</b> the AI never knows your story is about your town, your friends or your sense of humour unless you put it in. The more of <i>you</i> in the story, the better it gets. Try to keep the yellow bar above half.</p></div>`;
+  lightPills();
+  function drawDice(){dice.forEach((d,i)=>{$("#r"+i+" .face").textContent=d;$("#r"+i).classList.toggle("locked",locked[i]);$("#r"+i+" .lock").textContent=locked[i]?"Unlock":"Lock"});prompt()}
+  function promptText(task){return `${SAFE}\n\nWe are co-writing a ${genre.toLowerCase()} story with a ${tone.toLowerCase()} tone.\nMain character: ${dice[0]}.\nSetting: ${dice[1]}.\nProblem: ${dice[2]}.\n${parts.length?`\nStory so far:\n${parts.map(p=>p.t).join("\n\n")}\n`:""}\nYour task: ${task}\nWrite ONLY the new paragraph (60 to 90 words). No title, no notes.`}
+  function prompt(){$("#pbox").textContent=`Write a ${genre.toLowerCase()} story with a ${tone.toLowerCase()} tone.\nMain character: ${dice[0]}\nSetting: ${dice[1]}\nProblem: ${dice[2]}`}
+  $("#roll").onclick=()=>{const idx=[0,1,2].filter(i=>!locked[i]);if(!idx.length){toast("Unlock a die to roll it");return}
+    let n=0;idx.forEach(i=>$("#r"+i).classList.add("spinning"));const L=[HEROES,PLACES,PROBLEMS];
+    const t=setInterval(()=>{idx.forEach(i=>dice[i]=pickR(L[i]));drawDice();if(++n>9){clearInterval(t);idx.forEach(i=>$("#r"+i).classList.remove("spinning"))}},70)};
+  el.querySelectorAll(".lock").forEach(b=>b.onclick=()=>{locked[+b.dataset.l]=!locked[+b.dataset.l];drawDice()});
+  function chips(id,set){$(id).querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$(id).querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));c.setAttribute("aria-pressed","true");set(c.textContent);prompt()})}
+  chips("#genre",v=>genre=v);chips("#tone",v=>tone=v);
+  function render(){$("#story").innerHTML=parts.map(p=>`<p class="${p.w}"><span class="who">${p.w==="me"?"You":"AI"}</span>${esc(p.t)}</p>`).join("");
+    const me=parts.filter(p=>p.w==="me").reduce((a,p)=>a+p.t.split(/\s+/).length,0),ai=parts.filter(p=>p.w==="ai").reduce((a,p)=>a+p.t.split(/\s+/).length,0),tot=me+ai||1;
+    $("#vMe").style.width=(parts.length?me/tot*100:50)+"%";$("#vAi").style.width=(parts.length?ai/tot*100:50)+"%";
+    $("#wc").textContent=`${me+ai} words · you wrote ${Math.round(me/tot*100)}%`;$("#open").hidden=parts.length>0}
+  /* offline helper */
+  const name=()=>dice[0].replace(/^(a|an|the) /,"");
+  function offline(task){const h=dice[0],H=h.charAt(0).toUpperCase()+h.slice(1),n=name();
+    const funny=tone==="Funny",spooky=tone==="Spooky";
+    const O={
+     open:[`In ${dice[1]}, nobody expected ${h} to become a hero. But that morning, ${dice[2]}. People ran in circles, shouting and pointing, while ${n} stood very still and noticed something nobody else did: a small, glowing clue, half-hidden in the dust. "${spooky?"That should not be here,":funny?"Well, this is going to make me late for breakfast,":"Something is not right,"}" ${n} whispered, and stepped forward.`],
+     continue:[`${H} followed the clue past crowded stalls and narrow paths until the noise of ${dice[1]} faded. Each step made the mystery feel bigger. Then came a sound: soft, steady, almost like breathing. ${spooky?"The air turned cold.":"It was coming from somewhere very close."}`],
+     twist:[`Then ${n} realised the truth: the person everyone had been blaming was actually trying to help all along. ${funny?"Even worse, they were wearing "+n+"'s favourite slippers.":"Nothing was what it seemed."}`],
+     dialogue:[`"Who's there?" ${n} called.\n"Someone who has been waiting for you," said a voice from the shadows. "You're late."\n"Late? Nobody told me there was an appointment!"\n"Nobody ever does," the voice replied, and laughed.`],
+     funny:[`At that exact moment, a goat wandered in, sat down and stared at ${n} as if it had paid for a ticket to watch. ${H} sighed. "Fine. You can help. But no eating the clues."`],
+     ending:[`In the end, it was teamwork, a little courage and a lot of curiosity that fixed everything. ${dice[1].charAt(0).toUpperCase()+dice[1].slice(1)} went back to normal, or almost normal. And ${n} learned that the biggest adventures often begin with noticing the small things.`]};
+    return pickR(O[task])}
+  const TASKS={open:"write an exciting opening paragraph that introduces the character, setting and problem.",continue:"continue the story naturally from where it stopped.",twist:"add a surprising but believable twist.",dialogue:"continue with a short scene of lively dialogue between characters.",funny:"continue the story and make it funnier.",ending:"write a satisfying ending that wraps up the problem."};
+  async function aiTurn(task){if(busy)return;busy=true;$("#sstat").textContent="Thinking…";
+    const slot={w:"ai",t:""};parts.push(slot);render();
+    try{if(!AI)throw{code:"unavailable"};ctl=new AbortController();$("#stopS").hidden=false;
+      const r=await AI(promptText(TASKS[task]),{modelTier:"quick",cache:false,signal:ctl.signal,onText:({text})=>{slot.t=text;render();$("#sstat").textContent="Writing…"}});
+      slot.t=r.text.trim();$("#sstat").textContent="";
+    }catch(e){if(e&&e.code==="cancelled"&&slot.t){$("#sstat").textContent="Stopped."}else{slot.t=offline(task);$("#sstat").textContent=AI?aiErr(e):"Written by the offline helper. It uses story templates, not real AI."}}
+    finally{busy=false;$("#stopS").hidden=true;render();award("story",30,"Co-wrote with AI")}}
+  $("#stopS").onclick=()=>ctl&&ctl.abort();
+  $("#open").onclick=()=>aiTurn("open");
+  $("#moves").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{if(!parts.length){toast("Start with the opening first");return}aiTurn(c.dataset.m)});
+  $("#addMine").onclick=()=>{const t=$("#mine").value.trim();if(!t){toast("Write something first");return}parts.push({w:"me",t});$("#mine").value="";render();
+    const me=parts.filter(p=>p.w==="me").length;if(me>=2)award("storyme",20,"Your voice matters")};
+  $("#undo").onclick=()=>{if(!busy){parts.pop();render()}};
+  $("#saveS").onclick=()=>{if(!parts.length){toast("Write your story first");return}saveGal({type:"story",title:`${genre}: ${dice[2].replace(/^the /,"The ")}`,data:parts.map(p=>p.t).join("\n\n")})};
+  drawDice();render();
+};
+
+/* ================= PICTURE STUDIO ================= */
+RENDER.art=el=>{
+  const PAL={sunset:["#2B1B5A","#8A3B8F","#F2545B","#FF9F43","#FFD166"],gold:["#3A1F04","#8C5A12","#D4A017","#F7D774","#FFF3C4"],fire:["#1A0505","#7A0E0E","#E03616","#FF8C1A","#FFD23F"],
+    ocean:["#03133A","#0A3D7A","#1677B8","#4CC3E6","#B8F0FF"],night:["#04061A","#121A44","#2A3B8F","#6F7FD6","#F5F3C1"],forest:["#06200F","#0F4C2A","#2E8B57","#7BC67E","#E3F7B0"],
+    dream:["#1E0B3B","#5B2A86","#9A48D0","#F08BD8","#FFE0F7"],desert:["#4A2511","#9C4F1E","#D98E48","#F2C27B","#FFF1D0"],ankara:["#1B1464","#E63946","#F4A300","#2A9D8F","#F1FAEE"],ice:["#0B2545","#3E7CB1","#81A4CD","#DBE4EE","#FFFFFF"]};
+  const PW={sunset:["sunset","sunrise","evening","dusk"],gold:["gold","golden","yellow","sun","sunny"],fire:["fire","red","hot","volcano","flame","energetic"],ocean:["ocean","sea","beach","blue","water","river","lagoon"],night:["night","midnight","dark","moon","stars","space","galaxy"],forest:["forest","green","jungle","tree","trees","nature","farm"],dream:["purple","pink","dream","dreamy","magic","fantasy","planet","planets"],desert:["desert","sand","sahara","earth","brown","harmattan"],ankara:["ankara","colourful","colorful","pattern","fabric","adire","festival"],ice:["ice","snow","cold","winter","white"]};
+  const SHAPES={stars:["star","stars","galaxy","space","night"],moon:["moon","sun","planet","planets","sunset","sunrise"],waves:["wave","waves","ocean","sea","river","water","lagoon","beach"],mountains:["mountain","mountains","rock","hills","zuma","olumo"],circles:["circle","circles","bubbles","dots","balloons"],rain:["rain","rainy","storm","lines"],trees:["tree","trees","forest","palm","jungle"],pattern:["pattern","ankara","adire","fabric","kente","tiles"],birds:["bird","birds","flying","sky"],city:["city","lagos","buildings","skyline","town"]};
+  const MOOD={calm:["calm","peaceful","quiet","soft","gentle"],busy:["energetic","busy","crowded","wild","exciting","party"]};
+  let seed=1,last=null;
+  el.innerHTML=`<p class="intro">Image AI tools turn a sentence into a picture. They learned from millions of images paired with descriptions, so they know that "sunset" usually means warm oranges and "ocean" means waves and blues.</p>
+  <p>Most of them work in a surprising way called <b>diffusion</b>: they start with pure random noise, like TV static, and remove the noise step by step, guided by your words, until a picture appears.</p>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>Words into art</h2><div class="studio"><div>
+   <div class="art-frame"><canvas id="artCv" width="640" height="480"></canvas><span class="step-badge" id="stepB">Ready</span></div>
+   <div class="slider-row" style="margin-top:10px"><label for="scrub">Diffusion step</label><output id="scrubO">done</output><input type="range" id="scrub" min="0" max="30" value="30"></div>
+  </div><div>
+   <label for="ap" style="font-weight:700">Describe your picture</label>
+   <textarea id="ap" style="min-height:80px">calm ocean at night with stars and a full moon</textarea>
+   <div class="chips" style="margin:8px 0" id="aSug">${["golden sunset over Zuma Rock mountains","energetic ankara pattern with red circles","purple dreamy planets in space","peaceful green forest with birds","rainy night in Lagos city"].map(t=>`<button class="chip">${t}</button>`).join("")}</div>
+   <div class="row"><button class="btn primary" id="gen">🎨 Generate</button><button class="btn" id="vary">Another version</button></div>
+   <p class="axis" style="margin:12px 0 0">Words the art machine understood:</p><div class="understood" id="und"></div>
+   <div class="row" style="margin-top:14px"><button class="btn sun" id="saveA">Save to gallery</button></div>
+  </div></div></section>
+  <section class="lab"><span class="lab-tag">Bonus</span><h2>Ask a real AI to sketch it</h2><div class="row" style="justify-content:space-between"><p style="margin:0">A language AI can't paint, but it can write drawing instructions (SVG code) that your browser turns into a picture.</p>${pill()}</div>
+   <div class="row" style="margin-top:10px"><button class="btn primary" id="sketch">✏️ Sketch my prompt with AI</button><button class="btn" id="stopK" hidden>Stop</button></div><p class="status" id="kstat" aria-live="polite"></p>
+   <div class="art-frame" id="kFrame" hidden style="background:#fff"><img id="kImg" alt="AI sketch"></div>
+   <div class="row" style="margin-top:10px"><button class="btn sun" id="saveK" hidden>Save sketch to gallery</button></div></section>
+  <div class="note"><p><b>Try this:</b> generate the same words twice with "Another version". Same prompt, different picture, because each version starts from different random noise. Now change one word. Small prompt changes can make big differences.</p></div>`;
+  lightPills();
+  const cv=$("#artCv"),ctx=cv.getContext("2d"),W=640,H=480;
+  const art=document.createElement("canvas");art.width=W;art.height=H;const actx=art.getContext("2d");
+  const noise=document.createElement("canvas");noise.width=160;noise.height=120;
+  function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+  function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
+  function parse(text){const words=text.toLowerCase().match(/[a-z]+/g)||[];const found=new Set(),used=new Set();
+    let pal=null;for(const w of words)for(const k in PW)if(PW[k].includes(w)){if(!pal)pal=k;used.add(w)}
+    const shapes=[];for(const k in SHAPES)if(SHAPES[k].some(w=>words.includes(w))){shapes.push(k);SHAPES[k].forEach(w=>words.includes(w)&&used.add(w))}
+    let mood="normal";for(const k in MOOD)if(MOOD[k].some(w=>words.includes(w))){mood=k;MOOD[k].forEach(w=>words.includes(w)&&used.add(w))}
+    const stop=["a","an","the","with","and","of","in","on","at","over","under","full","my","is","to","by"];
+    return{pal:pal||pickR(Object.keys(PAL),rng(hash(text))),shapes:shapes.length?shapes:["circles","waves"],mood,words:words.filter(w=>!stop.includes(w)),used}}
+  function paint(text){
+    const P=parse(text),C=PAL[P.pal],r=rng(hash(text)+seed*7919),c=actx;
+    const k=P.mood==="busy"?1.8:P.mood==="calm"?.6:1,soft=P.mood==="calm"?.75:1;
+    const g=c.createLinearGradient(0,0,0,H);g.addColorStop(0,C[0]);g.addColorStop(.6,C[1]);g.addColorStop(1,C[2]);c.fillStyle=g;c.fillRect(0,0,W,H);
+    c.globalAlpha=1;
+    const has=s=>P.shapes.includes(s);
+    if(has("stars")){for(let i=0;i<160*k;i++){c.fillStyle=pickR([C[4],"#fff"],r);c.globalAlpha=.4+r()*.6;const s=r()*2.2+.4;c.beginPath();c.arc(r()*W,r()*H*.65,s,0,7);c.fill()}c.globalAlpha=1}
+    if(has("moon")){const x=W*(.2+r()*.6),y=H*(.15+r()*.2),rad=40+r()*40;const gg=c.createRadialGradient(x,y,rad*.2,x,y,rad*2.6);gg.addColorStop(0,hexA(C[4],.55));gg.addColorStop(1,hexA(C[4],0));c.fillStyle=gg;c.fillRect(0,0,W,H);c.fillStyle=C[4];c.beginPath();c.arc(x,y,rad,0,7);c.fill()}
+    if(has("mountains")){for(let l=0;l<3;l++){c.fillStyle=C[Math.max(0,2-l)];c.globalAlpha=.55+l*.2;c.beginPath();c.moveTo(0,H);let x=0;const base=H*(.55+l*.1);while(x<W){const pw=80+r()*140;c.lineTo(x+pw/2,base-60-r()*120+l*20);c.lineTo(x+pw,base);x+=pw}c.lineTo(W,H);c.fill()}c.globalAlpha=1}
+    if(has("city")){for(let x=0;x<W;){const bw=30+r()*50,bh=60+r()*180;c.fillStyle=C[0];c.fillRect(x,H-bh-60,bw,bh+60);c.fillStyle=C[4];for(let wy=H-bh-50;wy<H-70;wy+=16)for(let wx=x+6;wx<x+bw-8;wx+=12)if(r()<.45){c.globalAlpha=.8;c.fillRect(wx,wy,5,7)}c.globalAlpha=1;x+=bw+2}}
+    if(has("trees")){for(let i=0;i<14*k;i++){const x=r()*W,y=H*(.6+r()*.35),s=30+r()*50;c.fillStyle=C[0];c.fillRect(x-3,y-s*.2,6,s*.6);c.fillStyle=pickR([C[2],C[3]],r);c.beginPath();c.moveTo(x,y-s*1.4);c.lineTo(x-s*.5,y);c.lineTo(x+s*.5,y);c.fill()}}
+    if(has("circles")){for(let i=0;i<28*k;i++){c.globalAlpha=(.25+r()*.6)*soft;c.fillStyle=pickR(C.slice(2),r);c.beginPath();c.arc(r()*W,r()*H,8+r()*60,0,7);c.fill()}c.globalAlpha=1}
+    if(has("pattern")){const s=64;for(let y=0;y<H;y+=s)for(let x=0;x<W;x+=s){c.save();c.translate(x+s/2,y+s/2);c.globalAlpha=.85*soft;c.fillStyle=C[(x/s+y/s)%5|0];const m=Math.floor(r()*3);
+      if(m===0){c.beginPath();c.arc(0,0,s*.32,0,7);c.fill();c.fillStyle=C[4];c.beginPath();c.arc(0,0,s*.12,0,7);c.fill()}
+      else if(m===1){c.rotate(Math.PI/4);c.fillRect(-s*.25,-s*.25,s*.5,s*.5)}
+      else{c.beginPath();c.moveTo(0,-s*.35);c.lineTo(s*.3,s*.25);c.lineTo(-s*.3,s*.25);c.fill()}c.restore()}c.globalAlpha=1}
+    if(has("birds")){c.strokeStyle=C[0];c.lineWidth=3;for(let i=0;i<9*k;i++){const x=r()*W,y=r()*H*.5,s=8+r()*12;c.beginPath();c.moveTo(x-s,y);c.quadraticCurveTo(x-s/2,y-s*.7,x,y);c.quadraticCurveTo(x+s/2,y-s*.7,x+s,y);c.stroke()}}
+    if(has("waves")){for(let l=0;l<6;l++){c.fillStyle=C[Math.min(4,1+l%4)];c.globalAlpha=(.35+l*.1)*soft;const y0=H*(.62+l*.065),amp=6+r()*14*k,f=.01+r()*.02,ph=r()*6;c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=8)c.lineTo(x,y0+Math.sin(x*f+ph)*amp);c.lineTo(W,H);c.fill()}c.globalAlpha=1}
+    if(has("rain")){c.strokeStyle=hexA(C[4],.5);c.lineWidth=1.4;for(let i=0;i<220*k;i++){const x=r()*W,y=r()*H;c.beginPath();c.moveTo(x,y);c.lineTo(x-6,y+18);c.stroke()}}
+    const v=c.createRadialGradient(W/2,H/2,H*.4,W/2,H/2,H*.9);v.addColorStop(0,"rgba(0,0,0,0)");v.addColorStop(1,"rgba(0,0,0,.35)");c.fillStyle=v;c.fillRect(0,0,W,H);
+    // noise
+    const nr=rng(hash(text)+seed),nc=noise.getContext("2d"),id=nc.createImageData(160,120);for(let i=0;i<id.data.length;i+=4){const v=nr()*255;id.data[i]=v*(.6+nr()*.4);id.data[i+1]=v*(.6+nr()*.4);id.data[i+2]=v*(.6+nr()*.4);id.data[i+3]=255}nc.putImageData(id,0,0);
+    $("#und").innerHTML=P.words.slice(0,14).map(w=>`<span class="${P.used.has(w)?"":"miss"}">${esc(w)}</span>`).join("")+`<span>palette: ${P.pal}</span>`;
+    last=text;
+  }
+  function show(step){if(!cv.isConnected){clearInterval(anim);return}const t=1-step/30;ctx.filter=`blur(${t*14}px)`;ctx.drawImage(art,0,0);ctx.filter="none";ctx.globalAlpha=Math.min(1,t*1.05);ctx.imageSmoothingEnabled=false;ctx.drawImage(noise,0,0,W,H);ctx.globalAlpha=1;
+    $("#stepB").textContent=step>=30?"Finished":step===0?"Step 0: pure noise":`Step ${step} of 30: removing noise`;$("#scrub").value=step;$("#scrubO").textContent=step>=30?"done":step}
+  let anim=null;
+  function generate(user=true){const text=$("#ap").value.trim()||"colourful circles";paint(text);clearInterval(anim);
+    if(user)award("art",30,"First AI picture");
+    if(matchMedia("(prefers-reduced-motion: reduce)").matches){show(30);return}
+    let s=0;anim=setInterval(()=>{show(s);if(++s>30)clearInterval(anim)},55)}
+  $("#gen").onclick=()=>{seed=1;generate()};$("#vary").onclick=()=>{seed++;generate()};
+  $("#aSug").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("#ap").value=c.textContent;seed=1;generate()});
+  $("#scrub").oninput=e=>{if(last)show(+e.target.value)};
+  $("#saveA").onclick=()=>{if(!last){toast("Generate a picture first");return}show(30);const sm=document.createElement("canvas");sm.width=480;sm.height=360;sm.getContext("2d").drawImage(art,0,0,480,360);saveGal({type:"picture",title:last,data:sm.toDataURL("image/jpeg",.82)})};
+  let kctl=null,ksvg=null;
+  $("#stopK").onclick=()=>kctl&&kctl.abort();
+  $("#sketch").onclick=async()=>{const p=$("#ap").value.trim();if(!p){toast("Describe your picture first");return}
+    if(!AI){$("#kstat").textContent="The real AI helper isn't available here. Open this page inside Claude to use it. The art machine above still works.";return}
+    $("#kstat").textContent="Thinking… a real AI is planning your drawing. This can take up to a minute.";$("#sketch").disabled=true;$("#stopK").hidden=false;kctl=new AbortController();
+    try{const r=await AI(`${SAFE}\n\nDraw an original illustration of: "${p}".\nReply with ONLY a single SVG element: <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 360">…</svg>. Use flat colourful shapes, gradients are fine. No text, no external images or fonts, no scripts, under 5000 characters. Do not draw copyrighted characters, logos or real people; draw an original alternative instead.`,{modelTier:"default",cache:false,signal:kctl.signal,onText:()=>{$("#kstat").textContent="Drawing…"}});
+      const m=r.text.match(/<svg[\s\S]*<\/svg>/i);if(!m)throw{code:"bad"};
+      ksvg="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(m[0].replace(/<script[\s\S]*?<\/script>/gi,""));$("#kImg").src=ksvg;$("#kFrame").hidden=false;$("#saveK").hidden=false;$("#kstat").textContent="Here's the AI's sketch. Compare it with the art machine above. Which matches your words better?";award("sketch",20,"Real AI sketch")}
+    catch(e){$("#kstat").textContent=e&&e.code==="bad"?"The AI's drawing didn't come out right. Try again or simplify your prompt.":aiErr(e).replace(", so the offline helper took over","")}
+    finally{$("#sketch").disabled=false;$("#stopK").hidden=true}};
+  $("#saveK").onclick=()=>{const img=$("#kImg"),sm=document.createElement("canvas");sm.width=480;sm.height=360;const c=sm.getContext("2d");c.fillStyle="#fff";c.fillRect(0,0,480,360);
+    try{c.drawImage(img,0,0,480,360);saveGal({type:"picture",title:"AI sketch: "+$("#ap").value.trim(),data:sm.toDataURL("image/jpeg",.85)})}catch(e){toast("This sketch couldn't be saved")}};
+  generate(false);
+};
+
+/* ================= MUSIC STUDIO ================= */
+const NOTES=[{n:"E5",f:659.25},{n:"D5",f:587.33},{n:"C5",f:523.25},{n:"A4",f:440},{n:"G4",f:392},{n:"E4",f:329.63},{n:"D4",f:293.66},{n:"C4",f:261.63}];
+const Player={ac:null,timer:null,playing:false,song:null,onStep:null,
+  ensure(){if(!this.ac){const A=window.AudioContext||window.webkitAudioContext;this.ac=new A();this.master=this.ac.createGain();this.master.gain.value=.5;this.master.connect(this.ac.destination)}if(this.ac.state==="suspended")this.ac.resume()},
+  load(s){this.song=JSON.parse(JSON.stringify(s))},
+  note(f,inst){const a=this.ac,t=a.currentTime,o=a.createOscillator(),g=a.createGain();
+    const cfg={marimba:["triangle",.5,.35],kalimba:["sine",.45,.6],synth:["square",.12,.25],flute:["sine",.35,.4]}[inst]||["triangle",.5,.35];
+    o.type=cfg[0];o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(cfg[1],t+(inst==="flute"?.06:.008));g.gain.exponentialRampToValueAtTime(.0001,t+cfg[2]);o.connect(g).connect(this.master);o.start(t);o.stop(t+cfg[2]+.05);
+    if(inst==="kalimba"){const o2=a.createOscillator(),g2=a.createGain();o2.frequency.value=f*3.01;g2.gain.setValueAtTime(.12,t);g2.gain.exponentialRampToValueAtTime(.0001,t+.15);o2.connect(g2).connect(this.master);o2.start(t);o2.stop(t+.2)}},
+  kick(){const a=this.ac,t=a.currentTime,o=a.createOscillator(),g=a.createGain();o.frequency.setValueAtTime(150,t);o.frequency.exponentialRampToValueAtTime(40,t+.15);g.gain.setValueAtTime(.9,t);g.gain.exponentialRampToValueAtTime(.0001,t+.25);o.connect(g).connect(this.master);o.start(t);o.stop(t+.3)},
+  clap(){const a=this.ac,t=a.currentTime,b=a.createBuffer(1,a.sampleRate*.15,a.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    const s=a.createBufferSource(),f=a.createBiquadFilter(),g=a.createGain();s.buffer=b;f.type="bandpass";f.frequency.value=1600;g.gain.value=.5;s.connect(f).connect(g).connect(this.master);s.start(t)},
+  start(onStep){this.ensure();this.stop();this.playing=true;this.onStep=onStep;let i=0;const tick=()=>{const s=this.song;if(!s)return;
+      if(s.mel[i]>=0)this.note(NOTES[s.mel[i]].f,s.inst);if(s.kick[i])this.kick();if(s.clap[i])this.clap();if(i===0&&this.voiceHook)this.voiceHook();this.onStep&&this.onStep(i);i=(i+1)%16;
+      this.timer=setTimeout(tick,60000/(this.song.tempo||100)/2)};tick()},
+  stop(){clearTimeout(this.timer);this.timer=null;this.playing=false;this.onStep&&this.onStep(-1)}};
+function stopAudio(){if(Player.playing)Player.stop();Player.voiceHook=null;if(window.speechSynthesis)speechSynthesis.cancel()}
+RENDER.music=el=>{
+  const STYLES={
+   "Highlife":{tempo:118,mel:[[4,5,3,4,2,3,4,-1,5,4,3,-1,4,5,6,-1],[2,3,4,2,3,4,5,4,3,-1,3,4,5,-1,4,-1]],kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0],clap:[0,0,1,0,0,0,1,0,0,0,1,0,0,0,1,1]},
+   "Afrobeats":{tempo:104,mel:[[3,-1,3,4,-1,3,2,-1,3,-1,3,4,-1,5,4,-1],[5,5,-1,4,3,-1,4,5,-1,5,-1,4,3,4,-1,-1]],kick:[1,0,0,1,0,0,1,0,1,0,0,1,0,0,1,0],clap:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]},
+   "Lullaby":{tempo:76,mel:[[5,-1,4,-1,3,-1,4,-1,5,-1,5,-1,5,-1,-1,-1],[4,-1,4,-1,4,-1,-1,-1,5,-1,3,-1,3,-1,-1,-1]],kick:[1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],clap:Array(16).fill(0)},
+   "Video game":{tempo:140,mel:[[7,5,4,2,7,5,4,2,6,5,3,1,6,5,3,0],[2,-1,2,1,0,-1,1,2,3,-1,3,2,1,-1,0,-1]],kick:[1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0],clap:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0]}};
+  let song={mel:Array(16).fill(-1),kick:Array(16).fill(0),clap:Array(16).fill(0),tempo:110,inst:"marimba",lyrics:""},aiCells=new Set(),style="Highlife";
+  [4,-1,3,2].forEach((v,i)=>song.mel[i]=v);
+  el.innerHTML=`<p class="intro">Music AI learns patterns in songs: which notes tend to follow which, how rhythms repeat, what makes a lullaby feel calm and a party song feel bouncy. Give it the start of a tune, and it predicts what could come next, just like the word predictor in lesson 6, but with notes.</p>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>Start a melody, let AI finish it</h2>
+  <p>Tap squares to place notes. The <b style="background:var(--sun-soft);padding:0 4px">yellow zone</b> is your seed: write the first 4 beats. Then pick a style and press "AI, finish my song". AI notes appear in blue. Red rows are drums.</p>
+  <div class="row" style="margin-bottom:12px"><button class="btn primary" id="play">▶ Play</button>
+   <label class="axis" for="inst">Sound</label><select id="inst" class="btn small">${["marimba","kalimba","synth","flute"].map(i=>`<option>${i}</option>`).join("")}</select>
+   <label class="axis" for="tempo">Speed</label><input type="range" id="tempo" min="60" max="160" value="110" style="width:120px"><output id="tempoO" class="axis">110</output></div>
+  <div class="seq-wrap"><div class="seq" id="seq"></div></div>
+  <h3 style="margin-top:16px;font-size:1.05rem">AI style</h3><div class="chips" id="styles">${Object.keys(STYLES).map(s=>`<button class="chip" aria-pressed="${s===style}">${s}</button>`).join("")}</div>
+  <div class="row" style="margin-top:12px"><button class="btn sun" id="finish">🎵 AI, finish my song</button><button class="btn" id="remix">Remix</button><button class="btn" id="drums">Add drums</button><button class="btn" id="clearM">Clear</button></div>
+  <div class="note trans" id="trans" style="margin-top:14px"><p>Press "AI, finish my song" to see how the AI decides.</p></div></section>
+  <section class="lab"><span class="lab-tag">Voice studio</span><h2>Change your voice</h2>
+  <p>Record yourself saying or singing something (up to 8 seconds), then transform it. Turn it into a chipmunk, a giant, a robot or a radio DJ, and drop it into your song.</p>
+  <div class="row"><button class="btn primary" id="rec">🎙️ Record</button><span class="axis" id="recT"></span></div>
+  <p class="status" id="vstat" aria-live="polite"></p>
+  <div class="canvas-box" style="margin:10px 0"><canvas id="wave" style="height:90px;cursor:default"></canvas></div>
+  <div id="ttsBox" hidden><label for="ttsText" style="font-weight:700">No microphone? Type words for a computer voice to say:</label>
+   <div class="row" style="margin-top:6px"><input type="text" id="ttsText" value="Welcome to my song. Turn it up!" style="flex:1;min-width:200px"></div></div>
+  <h3 style="margin-top:14px;font-size:1.05rem">Voice effect</h3>
+  <div class="chips" id="vfx">${[["normal","🙂 Normal"],["chipmunk","🐿️ Chipmunk"],["giant","🦣 Giant"],["robot","🤖 Robot"],["alien","👽 Alien"],["radio","📻 Radio DJ"],["underwater","🫧 Underwater"],["cave","⛰️ Cave echo"],["reverse","🔄 Backwards"]].map(([k,l],i)=>`<button class="chip" data-fx="${k}" aria-pressed="${i===0}">${l}</button>`).join("")}</div>
+  <div class="neuron-grid" style="margin-top:12px"><div class="slider-row"><label for="vpitch">Pitch</label><output id="vpitchO">1.00×</output><input type="range" id="vpitch" min="0.5" max="2" step="0.05" value="1"></div>
+   <div class="slider-row"><label for="vecho">Echo</label><output id="vechoO">0%</output><input type="range" id="vecho" min="0" max="0.7" step="0.05" value="0"></div></div>
+  <div class="row"><button class="btn sun" id="vplay">▶ Play my voice</button>
+   <label class="toggle" style="margin:0"><input type="checkbox" id="vinsong"> Add my voice to the song (plays at the start of each loop)</label></div>
+  <p class="axis" style="margin-top:10px">Your recording stays on this device and disappears when you leave this page. It is never saved or uploaded.</p></section>
+  <div class="note"><p><b>Effects vs. AI voices:</b> these effects are classic sound maths: speeding sound up raises the pitch, mixing in a buzzing wave makes a robot, filters make a radio. Newer <b>AI voice tools</b> go further: they learn the patterns of a real person's voice from recordings and can make it say anything. That is powerful for dubbing films into Hausa, Yoruba or Igbo, or giving a voice to people who lost theirs. But cloning someone's voice without permission is a deepfake. Always ask first.</p></div>
+  <section class="lab"><span class="lab-tag">Bonus</span><h2>Write a chorus for your song</h2><div class="row" style="justify-content:space-between"><p style="margin:0">What is your song about?</p>${pill()}</div>
+  <div class="row" style="margin-top:8px"><input type="text" id="topic" value="the first day of rainy season" style="flex:1;min-width:200px"><button class="btn primary" id="lyr">✍️ Write chorus</button></div>
+  <div class="sentence" id="lyrics" style="white-space:pre-wrap;font-size:1.1rem"></div><p class="status" id="lstat" aria-live="polite"></p>
+  <p class="axis">Edit the lyrics yourself. Make them sound like you.</p>
+  <div class="row"><button class="btn sun" id="saveM">Save song to gallery</button></div></section>
+  <div class="note"><p>AI can make music in seconds, but music that moves people usually comes from human feeling and stories. Real musicians use AI to try ideas quickly, then choose, change and perform what feels right.</p></div>`;
+  lightPills();
+  $("#lyrics").contentEditable="true";
+  const seq=$("#seq");
+  function build(){let h="";NOTES.forEach((nt,r)=>{h+=`<span class="rl">${nt.n}</span>`;for(let i=0;i<16;i++)h+=`<button class="${i<4?"seed":""} ${i%4===0&&i?"gap4":""} ${song.mel[i]===r?"on":""} ${song.mel[i]===r&&aiCells.has(i)?"ai":""}" data-r="${r}" data-i="${i}" aria-label="${nt.n} beat ${i+1}"></button>`});
+    h+=`<span class="sep"></span>`;[["kick","Kick"],["clap","Clap"]].forEach(([k,lab])=>{h+=`<span class="rl">${lab}</span>`;for(let i=0;i<16;i++)h+=`<button class="drum ${i%4===0&&i?"gap4":""} ${song[k][i]?"on":""}" data-d="${k}" data-i="${i}" aria-label="${lab} beat ${i+1}"></button>`});
+    seq.innerHTML=h;
+    seq.querySelectorAll("button").forEach(b=>b.onclick=()=>{const i=+b.dataset.i;if(b.dataset.d){song[b.dataset.d][i]^=1}else{const r=+b.dataset.r;song.mel[i]=song.mel[i]===r?-1:r;aiCells.delete(i);if(song.mel[i]>=0&&!Player.playing){Player.ensure();Player.note(NOTES[r].f,song.inst)}}Player.load(song);build()})}
+  function hl(i){seq.querySelectorAll("button.play").forEach(b=>b.classList.remove("play"));if(i>=0)seq.querySelectorAll(`button[data-i="${i}"]`).forEach(b=>b.classList.add("play"))}
+  $("#play").onclick=()=>{if(Player.playing){Player.stop();$("#play").textContent="▶ Play";return}Player.load(song);Player.start(hl);$("#play").textContent="■ Stop"};
+  $("#inst").onchange=e=>{song.inst=e.target.value;Player.load(song)};
+  $("#tempo").oninput=e=>{song.tempo=+e.target.value;$("#tempoO").textContent=song.tempo;Player.load(song)};
+  $("#styles").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("#styles").querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));c.setAttribute("aria-pressed","true");style=c.textContent});
+  function finish(){
+    const seed=song.mel.slice(0,4);if(seed.every(v=>v<0)){toast("Put at least one note in the yellow zone first");return}
+    const S=STYLES[style],T={};const add=(a,b,w)=>{T[a]??={};T[a][b]=(T[a][b]||0)+w};
+    S.mel.forEach(m=>{for(let i=0;i<m.length-1;i++)add(m[i],m[i+1],1)});for(let i=0;i<3;i++)add(seed[i],seed[i+1],3);
+    let prev=seed[3]<0?seed.filter(v=>v>=0).pop():seed[3];
+    for(let i=4;i<16;i++){const opts=T[prev]||T[seed.find(v=>v>=0)]||{};let tot=Object.values(opts).reduce((a,b)=>a+b,0),r=Math.random()*tot,nx=-1;for(const k in opts){r-=opts[k];if(r<=0){nx=+k;break}}
+      if(i===15)nx=seed.find(v=>v>=0);song.mel[i]=nx;aiCells.add(i);if(nx>=0)prev=nx}
+    const base=seed.filter(v=>v>=0).pop(),o=T[base]||{},tot=Object.values(o).reduce((a,b)=>a+b,0);
+    $("#trans").innerHTML=`<p><b>How the AI decided:</b> it learned from your seed plus ${style} example tunes. After <b>${NOTES[base].n}</b>, it has seen:</p>${Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>`<div class="bar-row"><span>${k<0?"a rest":NOTES[k].n}</span><span class="bar-track"><span class="bar" style="display:block;width:${v/tot*100}%"></span></span><span>${Math.round(v/tot*100)}%</span></div>`).join("")}<p style="margin:8px 0 0">It rolled the dice using those chances, note after note. It ended on your first note so the tune feels finished. Press Remix to roll again.</p>`;
+    song.tempo=S.tempo;$("#tempo").value=S.tempo;$("#tempoO").textContent=S.tempo;Player.load(song);build();award("music",30,"AI finished your song")}
+  $("#finish").onclick=finish;$("#remix").onclick=finish;
+  $("#drums").onclick=()=>{const S=STYLES[style];song.kick=[...S.kick];song.clap=[...S.clap];Player.load(song);build()};
+  $("#clearM").onclick=()=>{song.mel=Array(16).fill(-1);song.kick=Array(16).fill(0);song.clap=Array(16).fill(0);aiCells.clear();Player.load(song);build()};
+  const OFF=["Clouds are rolling, drums are calling,\nHear the first rain softly falling,\nRaise your hands up to the sky,\nNew season, let the dreams fly high!","We rise, we rise, like the morning sun,\nHand in hand, we're stronger as one,\nFrom the north to the south we sing,\nHear the joy that tomorrow brings!"];
+  $("#lyr").onclick=async()=>{const t=$("#topic").value.trim()||"friendship";$("#lstat").textContent="Thinking…";$("#lyr").disabled=true;
+    try{$("#lyrics").textContent=await askAI(`${SAFE}\n\nWrite a catchy 4-line song chorus about "${t}" for a ${style} style song. Simple rhyming words that are fun to sing. Reply with only the 4 lines.`,x=>{$("#lyrics").textContent=x;$("#lstat").textContent="Writing…"});$("#lstat").textContent="Now edit it and make it yours."}
+    catch(e){$("#lyrics").textContent=pickR(OFF);$("#lstat").textContent=AI?aiErr(e):"Example chorus from the offline helper. Change the words to match your topic."}
+    finally{$("#lyr").disabled=false}};
+  $("#saveM").onclick=()=>{if(song.mel.every(v=>v<0)){toast("Add some notes first");return}song.lyrics=$("#lyrics").textContent.trim();saveGal({type:"song",title:($("#topic").value.trim()||"My song")+` (${style})`,data:JSON.parse(JSON.stringify(song))})};
+  /* ---------- voice studio ---------- */
+  const V={buf:null,rev:null,fx:"normal",pitch:1,echo:0,nodes:[],rec:null,tts:false};
+  const FX={normal:{r:1},chipmunk:{r:1.65},giant:{r:.62},robot:{r:1,ring:55},alien:{r:1.15,vib:[7,60]},radio:{r:1,band:1800},underwater:{r:.9,low:550,vib:[4,35]},cave:{r:.95,echo:.45},reverse:{r:1,rev:true}};
+  const TTS={normal:[1,1],chipmunk:[2,1.35],giant:[0.1,.8],robot:[.6,.85],alien:[1.8,.7],radio:[1.1,1.2],underwater:[.4,.7],cave:[.7,.85],reverse:[1,1]};
+  const wave=$("#wave");
+  function drawWave(){const {ctx,w,h}=setupCanvas(wave);ctx.clearRect(0,0,w,h);ctx.fillStyle=css("--muted");
+    if(!V.buf){ctx.font="14px sans-serif";ctx.textAlign="center";ctx.fillText(V.tts?"Computer voice ready":"Your recording will appear here",w/2,h/2+5);return}
+    const d=(V.fx==="reverse"?V.rev:V.buf).getChannelData(0),step=Math.ceil(d.length/w);ctx.fillStyle=css("--blue");
+    for(let x=0;x<w;x++){let mx=0;for(let j=0;j<step;j+=8)mx=Math.max(mx,Math.abs(d[x*step+j]||0));const bh=Math.max(1,mx*h*.95);ctx.fillRect(x,(h-bh)/2,1,bh)}}
+  function stopVoice(){V.nodes.forEach(n=>{try{n.stop?n.stop():n.disconnect()}catch(e){}});V.nodes=[];if(window.speechSynthesis)speechSynthesis.cancel()}
+  function playVoice(){
+    if(V.tts){if(!window.speechSynthesis){$("#vstat").textContent="This browser can't speak text aloud.";return}
+      speechSynthesis.cancel();const u=new SpeechSynthesisUtterance($("#ttsText").value||"Hello");const t=TTS[V.fx];u.pitch=Math.min(2,t[0]*V.pitch);u.rate=t[1];
+      let words=($("#ttsText").value||"Hello").split(" ");if(V.fx==="reverse")u.text=words.reverse().join(" ");speechSynthesis.speak(u);return}
+    if(!V.buf){$("#vstat").textContent="Record something first.";return}
+    Player.ensure();const ac=Player.ac,f=FX[V.fx],t=ac.currentTime+.02;
+    const src=ac.createBufferSource();src.buffer=f.rev?V.rev:V.buf;src.playbackRate.value=f.r*V.pitch;V.nodes.push(src);let node=src;
+    if(f.ring){const g=ac.createGain();g.gain.value=0;const o=ac.createOscillator();o.frequency.value=f.ring;o.connect(g.gain);o.start(t);o.stop(t+src.buffer.duration/src.playbackRate.value+.1);node.connect(g);node=g;V.nodes.push(o)}
+    if(f.band){const b=ac.createBiquadFilter();b.type="bandpass";b.frequency.value=f.band;b.Q.value=1.4;const ws=ac.createWaveShaper(),c=new Float32Array(256);for(let i=0;i<256;i++){const x=i/128-1;c[i]=Math.tanh(x*3)}ws.curve=c;node.connect(b);b.connect(ws);node=ws}
+    if(f.low){const l=ac.createBiquadFilter();l.type="lowpass";l.frequency.value=f.low;node.connect(l);node=l}
+    if(f.vib){const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f.vib[0];g.gain.value=f.vib[1];o.connect(g).connect(src.detune);o.start(t);o.stop(t+src.buffer.duration/src.playbackRate.value+.1);V.nodes.push(o)}
+    const out=ac.createGain();out.gain.value=1.3;node.connect(out);out.connect(Player.master);
+    const e=Math.max(V.echo,f.echo||0);if(e>0){const d=ac.createDelay(1),fb=ac.createGain(),wet=ac.createGain();d.delayTime.value=f.echo?.32:.24;fb.gain.value=e;wet.gain.value=.7;out.connect(d);d.connect(fb).connect(d);d.connect(wet).connect(Player.master);
+      setTimeout(()=>{try{d.disconnect();fb.disconnect()}catch(x){}},(src.buffer.duration/src.playbackRate.value+4)*1000)}
+    src.start(t);award("voice",20,"Changed your voice")}
+  Player.voiceHook=()=>{if($("#vinsong")&&$("#vinsong").checked&&(V.buf||V.tts))playVoice()};
+  function noMic(msg){V.tts=true;$("#ttsBox").hidden=false;$("#vstat").textContent=msg;drawWave()}
+  $("#rec").onclick=async()=>{
+    if(V.rec&&V.rec.state==="recording"){V.rec.stop();return}
+    if(!navigator.mediaDevices||!window.MediaRecorder){noMic("Recording isn't supported in this browser, so you can use a computer voice instead.");return}
+    let stream;try{stream=await navigator.mediaDevices.getUserMedia({audio:true})}
+    catch(e){noMic("The microphone isn't available here (it may be blocked or not allowed). You can use a computer voice instead, or open this page in a browser where you allow the microphone.");return}
+    V.tts=false;$("#ttsBox").hidden=true;Player.ensure();const chunks=[];V.rec=new MediaRecorder(stream);V.rec.ondataavailable=e=>chunks.push(e.data);
+    let left=8;$("#rec").textContent="⏹ Stop recording";$("#recT").textContent="Recording… 8s";$("#vstat").textContent="";
+    const tm=setInterval(()=>{left--;$("#recT").textContent=`Recording… ${left}s`;if(left<=0&&V.rec.state==="recording")V.rec.stop()},1000);
+    V.rec.onstop=async()=>{clearInterval(tm);stream.getTracks().forEach(t=>t.stop());$("#rec").textContent="🎙️ Record again";$("#recT").textContent="";
+      try{const ab=await new Blob(chunks).arrayBuffer();V.buf=await Player.ac.decodeAudioData(ab);
+        V.rev=Player.ac.createBuffer(V.buf.numberOfChannels,V.buf.length,V.buf.sampleRate);for(let c=0;c<V.buf.numberOfChannels;c++)V.rev.getChannelData(c).set(Array.from(V.buf.getChannelData(c)).reverse());
+        $("#vstat").textContent="Got it! Now pick an effect and press play.";drawWave()}
+      catch(e){$("#vstat").textContent="That recording couldn't be read. Try again."}};
+    V.rec.start()};
+  $("#vfx").querySelectorAll(".chip").forEach(c=>c.onclick=()=>{$("#vfx").querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));c.setAttribute("aria-pressed","true");V.fx=c.dataset.fx;drawWave();stopVoice();playVoice()});
+  $("#vpitch").oninput=e=>{V.pitch=+e.target.value;$("#vpitchO").textContent=V.pitch.toFixed(2)+"×"};
+  $("#vecho").oninput=e=>{V.echo=+e.target.value;$("#vechoO").textContent=Math.round(V.echo*100)+"%"};
+  $("#vplay").onclick=()=>{stopVoice();playVoice()};
+  requestAnimationFrame(drawWave);
+  Player.load(song);build();
+};
+
+/* ================= IDEA LAB ================= */
+RENDER.ideas=el=>{
+  const R=[["Problem",["power outages","traffic jams","plastic waste in gutters","students without textbooks","farmers losing crops to pests","finding clean water","long hospital queues","learning local languages","flooding in rainy season","fake news on WhatsApp"]],
+           ["Tool",["a phone app","solar power","an AI camera","SMS (no internet needed)","a game","a small robot","community radio","a chatbot","a website","recycled materials"]],
+           ["For",["market traders","primary school pupils","farmers","grandparents","keke drivers","your classmates","people with disabilities","new students","nurses","small shop owners"]]];
+  let cur=R.map(r=>pickR(r[1])),ctl=null;
+  el.innerHTML=`<p class="intro">Inventors often find great ideas by <b>combining things that don't usually go together</b>. AI is very good at producing lots of combinations quickly. Your job is to spot the promising ones and make them real.</p>
+  <section class="lab"><span class="lab-tag">Step 1</span><h2>Spin the idea machine</h2>
+  <div class="slot" id="slot">${R.map((r,i)=>`<div id="s${i}"><small>${r[0]}</small><b></b></div>`).join("")}</div>
+  <div class="row" style="margin-top:12px"><button class="btn sun" id="spin">🎰 Spin</button><span class="axis">Spin until a combination makes you think "hmm, that could work".</span></div></section>
+  <section class="lab"><span class="lab-tag">Step 2</span><h2>Your idea, in one sentence</h2>
+  <p>You think first. How could <b id="combo"></b> help? Don't worry if it sounds strange.</p>
+  <textarea id="myIdea" style="min-height:70px" placeholder="My idea is…"></textarea>
+  <div class="row" style="margin-top:8px;justify-content:space-between"><button class="btn primary" id="grow">🌱 Grow my idea with AI</button>${pill()}</div>
+  <p class="status" id="istat" aria-live="polite"></p><div id="ideaOut"></div></section>
+  <div class="note"><p><b>Think like an inventor:</b> AI's suggestions are a starting point, not the answer. Ask the people you want to help. Would they actually use it? What would make it cheaper or simpler? That human judgement is what turns an idea into an invention.</p></div>`;
+  lightPills();
+  function draw(){cur.forEach((c,i)=>$("#s"+i+" b").textContent=c);$("#combo").textContent=`${cur[1]} for ${cur[2]} dealing with ${cur[0]}`}
+  $("#spin").onclick=()=>{let n=0;R.forEach((_,i)=>$("#s"+i).classList.add("spin"));const t=setInterval(()=>{cur=R.map(r=>pickR(r[1]));draw();if(++n>12){clearInterval(t);R.forEach((_,i)=>$("#s"+i).classList.remove("spin"));award("spin",10,"Idea spun")}},80)};
+  function card(d){return `<div class="idea-card"><h3>💡 ${esc(d.name)}</h3><p>${esc(d.pitch)}</p><b>How it works</b><ol>${(d.how||[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ol><p><b>A first step you could take this week:</b> ${esc(d.first_step)}</p><p><b>A challenge to think about:</b> ${esc(d.challenge)}</p>
+    <div class="row"><button class="btn sun small" id="saveI">Save idea to gallery</button><button class="btn small" id="again">Grow it differently</button><button class="btn small primary" id="playIt">🎮 Play this idea as a startup</button></div></div>`}
+  function offline(mine){const [p,t,u]=cur;return{name:`${t.split(" ").slice(-1)[0].replace(/[()]/g,"").replace(/^./,c=>c.toUpperCase())}Help for ${u.replace(/^./,c=>c.toUpperCase())}`,pitch:mine||`Use ${t} to help ${u} deal with ${p}.`,
+    how:[`Talk to five ${u} to learn exactly how ${p} affects them.`,`Build a simple version using ${t}, even on paper first.`,`Test it with a small group, collect feedback and improve it.`],first_step:`Write down three questions to ask ${u} about ${p}, and ask them this week.`,challenge:`How will it work for people who can't afford it or don't have a smartphone?`}}
+  let lastIdea=null;
+  async function grow(){const mine=$("#myIdea").value.trim();if(!mine){toast("Write your own idea first. AI builds on yours.");$("#myIdea").focus();return}
+    $("#istat").textContent="Thinking…";$("#grow").disabled=true;
+    try{if(!AI)throw{code:"unavailable"};
+      lastIdea=await AI.json(`${SAFE}\n\nA student is inventing a solution for their Nigerian community.\nCombination: ${cur[1]} for ${cur[2]} dealing with ${cur[0]}.\nStudent's idea: "${mine}"\nBuild on THEIR idea (keep their core idea, make it practical and affordable for Nigeria). Respond with only JSON: {"name": short catchy name, "pitch": one exciting sentence, "how": [3 short steps of how it works], "first_step": something a secondary school student could do this week, "challenge": one honest problem they must solve}`,{modelTier:"quick",cache:false});
+      $("#istat").textContent="";}
+    catch(e){lastIdea=offline(mine);$("#istat").textContent=AI?aiErr(e):"Grown by the offline helper using a simple plan template."}
+    finally{$("#grow").disabled=false}
+    $("#ideaOut").innerHTML=card(lastIdea);award("ideas",30,"Idea grown");
+    $("#saveI").onclick=()=>saveGal({type:"idea",title:lastIdea.name,data:`${lastIdea.pitch}\n\n${(lastIdea.how||[]).map((x,i)=>i+1+". "+x).join("\n")}\n\nFirst step: ${lastIdea.first_step}\nChallenge: ${lastIdea.challenge}\n\nMy original idea: ${mine}`});
+    $("#again").onclick=grow;
+    $("#playIt").onclick=()=>{store.set("pendingIdea",{name:lastIdea.name,problem:`${cur[2].replace(/^./,c=>c.toUpperCase())} struggle with ${cur[0]}.`,ai:lastIdea.pitch});open(LESSONS.findIndex(l=>l.id==="sim"))}}
+  $("#grow").onclick=grow;draw();
+};
+
+/* ================= CREATOR'S CODE ================= */
+RENDER.ethics=el=>{
+  const C=[
+   ["You use AI to brainstorm ideas for a story, then write the whole story yourself.","ok","Fair. AI sparked ideas, but the writing is yours. Many authors brainstorm with friends or tools."],
+   ["You enter an AI-written poem into a school competition as entirely your own work.","no","Not fair. That is presenting someone else's work as yours. Competitions judge your creativity."],
+   ["You make an AI picture of a classmate doing something embarrassing and share it on WhatsApp.","no","Not fair, and harmful. Fake images of real people can be bullying, and they can spread fast and hurt for a long time."],
+   ["You use AI music in your class video and write \"Music made with AI\" in the credits.","ok","Fair. Being open about using AI is honest and respectful to your audience."],
+   ["You clone your friend's voice with AI to prank call her mum.","no","Not fair. Copying someone's voice without permission is a deepfake. It can scare people and be used for scams."],
+   ["You ask AI to copy the style of a living Nigerian artist and sell the pictures.","dep","It depends, and it needs care. Selling look-alikes can take money and credit from a real artist. Learn from styles, but develop your own, and credit or ask artists you are inspired by."],
+   ["You use AI to check the grammar of your assignment.","dep","It depends on your school's rules. Many teachers allow spell-checking tools, others don't. When unsure, ask your teacher."],
+   ["You use AI to turn your story into an audiobook so a friend with dyslexia can enjoy it.","ok","Fair, and kind. Using AI to make creations accessible to more people is a great use of the technology."]];
+  let done=0;
+  el.innerHTML=`<p class="intro">AI gives everyone powerful creative tools. With that power come real questions: Who made this? Is it honest? Could it hurt someone? Creators who use AI well follow a simple code.</p>
+  <section class="lab"><span class="lab-tag">Activity</span><h2>Fair, not fair, or it depends?</h2><div id="eths">${C.map((c,i)=>`<div class="eth" data-i="${i}"><b>${c[0]}</b><div class="row" style="margin-top:10px"><button class="btn small" data-a="ok">👍 Fair</button><button class="btn small" data-a="no">👎 Not fair</button><button class="btn small" data-a="dep">🤔 It depends</button></div><p class="feedback"></p></div>`).join("")}</div>
+  <p class="axis" id="escore">0 of ${C.length} answered</p></section>
+  <section class="lab"><span class="lab-tag">Your pledge</span><h2>The creator's code</h2><p>Tick the promises you're ready to make.</p>
+  ${["I will be honest about when I use AI in my work.","I will give credit to the people and tools that helped me.","I will never use AI to fake, mock or hurt real people.","I will put my own ideas, voice and choices into everything I create.","I will check AI's facts before I share them."].map((t,i)=>`<label class="toggle"><input type="checkbox" class="pl"> ${t}</label>`).join("")}
+  <div class="row" style="margin-top:10px"><input type="text" id="pname" placeholder="Your name" value="${esc(store.get("name",""))}" aria-label="Your name"><button class="btn sun" id="sign">Sign the code</button></div><div id="badge"></div></section>`;
+  el.querySelectorAll(".eth").forEach(card=>card.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(card.dataset.d)return;card.dataset.d=1;const c=C[+card.dataset.i],ok=b.dataset.a===c[1];
+    card.classList.add(ok?"right":"wrong");card.querySelector(".feedback").innerHTML=(ok?"<b>Yes.</b> ":"<b>Think again.</b> ")+c[2];done++;$("#escore").textContent=`${done} of ${C.length} answered`;if(done===C.length)award("ethics",30,"Thoughtful creator")}));
+  $("#sign").onclick=()=>{const all=[...el.querySelectorAll(".pl")].every(x=>x.checked),n=$("#pname").value.trim();
+    if(!all){toast("Tick all five promises to sign");return}if(!n){toast("Add your name");return}store.set("name",n);
+    $("#badge").innerHTML=`<div class="badge"><span class="big">🏅</span><div><b>${esc(n)}</b><br>Responsible AI Creator</div></div>`;award("pledge",30,"Signed the creator's code")};
+};
+
+/* ================= AI FOUNDER: SIMULATION GAME ================= */
+const MISSIONS={
+ pest:{em:"🌿",name:"PestSpotter",problem:"Farmers in Benue lose cassava to pests and diseases.",ai:"an image AI that spots sick leaves from a phone photo",groups:["Farms near towns","Village smallholders"],img:true},
+ flood:{em:"🌊",name:"FloodWatch",problem:"Floods along the Niger in Kogi destroy homes every rainy season.",ai:"a prediction AI that warns people days before floods",groups:["Riverside towns","Remote villages"],img:false},
+ study:{em:"📚",name:"StudyBuddy",problem:"Many students have no textbooks or lesson teachers.",ai:"a homework chatbot that works by SMS, no internet needed",groups:["City schools","Rural schools"],img:false},
+ power:{em:"⚡",name:"LightAlert",problem:"Traders in Onitsha lose goods when power cuts happen without warning.",ai:"a prediction AI that forecasts power cuts",groups:["Big markets","Roadside stalls"],img:false}
+};
+const PERKS={data:["📊","Data whiz","Collecting data costs 25% less"],people:["🤝","Community leader","Start with more trust, interviews give extra"],code:["💻","Coding genius","Training gives +4% accuracy"]};
+function naira(n){return "₦"+Math.round(n).toLocaleString("en-NG")}
+RENDER.sim=el=>{
+  let g=null,mission="pest",perk="people",pending=store.get("pendingIdea",null);
+  if(pending){MISSIONS.custom={em:"💡",name:pending.name,problem:pending.problem,ai:pending.ai,groups:["People in cities","People in villages"],img:false};mission="custom";store.set("pendingIdea",null)}
+  const best=store.get("simBest",null);
+  el.innerHTML=`<p class="intro">You've learned how AI works and how to create with it. Now run your own AI startup. You have <b>12 weeks</b> and <b>${naira(800000)}</b> to build an AI that truly helps a Nigerian community.</p>
+  <p>Every choice matters: where you collect data, when you train, whether you test with real people, and what you do when someone offers easy money. Your mentor, Aunty Ada, will guide you.</p>
+  <div id="game"></div>`;
+  const root=$("#game");
+  /* ---------- setup ---------- */
+  function setup(){
+    root.innerHTML=`<section class="lab"><span class="lab-tag">Step 1</span><h2>Choose your mission</h2>
+    <div class="missions" id="ms">${Object.entries(MISSIONS).map(([k,m])=>`<button class="mission" data-k="${k}" aria-pressed="${k===mission}"><span class="em">${m.em}</span><b>${esc(m.name)}</b><span>${esc(m.problem)}</span><span>Build: ${esc(m.ai)}</span></button>`).join("")}</div>
+    <p class="axis" style="margin-top:10px">Tip: grow an idea in the Idea lab, then press "Play this idea as a startup" to bring it here.</p></section>
+    <section class="lab"><span class="lab-tag">Step 2</span><h2>Name your startup and pick your superpower</h2>
+    <div class="row"><input type="text" id="sname" value="${esc(MISSIONS[mission].name)}" aria-label="Startup name" style="flex:1;max-width:320px"></div>
+    <div class="missions" id="ps" style="margin-top:12px">${Object.entries(PERKS).map(([k,p])=>`<button class="mission" data-k="${k}" aria-pressed="${k===perk}"><span class="em">${p[0]}</span><b>${p[1]}</b><span>${p[2]}</span></button>`).join("")}</div>
+    <div class="row" style="margin-top:16px"><button class="btn primary" id="startG">🚀 Launch my startup</button>${best?`<span class="axis">Your best: ${"★".repeat(best.stars)}${"☆".repeat(5-best.stars)} with ${esc(best.name)}</span>`:""}</div></section>`;
+    root.querySelectorAll("#ms .mission").forEach(b=>b.onclick=()=>{mission=b.dataset.k;$("#sname").value=MISSIONS[mission].name;root.querySelectorAll("#ms .mission").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+    root.querySelectorAll("#ps .mission").forEach(b=>b.onclick=()=>{perk=b.dataset.k;root.querySelectorAll("#ps .mission").forEach(x=>x.setAttribute("aria-pressed",x===b))});
+    $("#startG").onclick=()=>{const m=MISSIONS[mission];
+      g={m,name:$("#sname").value.trim()||m.name,perk,week:1,ap:3,money:800000,data:[0,0],q:.6,model:null,versions:[],tested:false,launched:false,users:[0,0],trust:perk==="people"?60:45,
+         translated:false,privacy:false,sold:false,hype:false,leak:false,skipAP:0,usedEv:[],pitchWeek:-9,log:[],done:false,rest:0};
+      say(`Welcome, founder of ${g.name}! Your mission: ${m.problem} You will build ${m.ai}.`,"tip");
+      say("Aunty Ada: \"Every AI starts with data. Go and collect some, but think about WHO your data comes from.\"","tip");
+      play();award("simstart",10,"Startup founded")}
+  }
+  /* ---------- model maths ---------- */
+  function accNow(){const [c,r]=g.data,q=g.q,b=g.perk==="code"?4:0;const f=e=>50+45*(1-Math.exp(-e/350));
+    return [Math.min(97,f(c*q+.25*r*q)+b),Math.min(97,f(r*q+.25*c*q)+b)]}
+  const est=()=>g.model?Math.round(g.model[0]):0; /* the team only checks on city data unless they test in the community */
+  function say(t,cls=""){g.log.unshift({t,cls,w:g.week})}
+  const dcost=n=>g.perk==="data"?n*.75:n;
+  /* ---------- actions ---------- */
+  const ACTS=[
+   {id:"cityData",ic:"🏙️",n:()=>`Collect data: ${g.m.groups[0]}`,d:"Fast and cheap. +200 examples.",cost:()=>dcost(40000),ap:1,run(){g.data[0]+=200;say(`Collected 200 examples from ${g.m.groups[0].toLowerCase()}.`)}},
+   {id:"ruralData",ic:"🌾",n:()=>`Collect data: ${g.m.groups[1]}`,d:"Slower and costs more. +150 examples.",cost:()=>dcost(80000),ap:1,run(){g.data[1]+=150;g.trust=Math.min(100,g.trust+2);say(`Travelled out to collect 150 examples from ${g.m.groups[1].toLowerCase()}. People appreciated the visit.`)}},
+   {id:"labelPay",ic:"🏷️",n:()=>"Hire expert labellers",d:"Experts check every label. Data quality up a lot.",cost:()=>60000,ap:1,can:()=>g.q<.95,run(){g.q=Math.min(.95,g.q+.15);say("Experts cleaned up your labels. Better labels mean a smarter AI.","good")}},
+   {id:"labelVol",ic:"🙋",n:()=>"Label with volunteers",d:"Free, but slower. Quality up a little.",cost:()=>0,ap:2,can:()=>g.q<.95,run(){g.q=Math.min(.95,g.q+.08);say("Your classmates helped label data for free. Thank them!")}},
+   {id:"train",ic:"🧠",n:()=>g.model?"Retrain the model":"Train the model",d:"Rent computers to train on your data.",cost:()=>50000,ap:1,can:()=>g.data[0]+g.data[1]>=100,run(){const prev=g.model;g.model=accNow();g.versions.push(est());
+      say(`Model v${g.versions.length} trained. Your team's test says ${est()}% accurate.`,"good");if(!g.tested&&g.versions.length===1)say("Aunty Ada: \"Your team tested it on the data you collected. Have you checked how it works for EVERYONE?\"","tip");
+      if(prev&&est()<=Math.round(prev[0]))say("Retraining on the same data didn't help much. New, better data is what makes AI smarter.","tip")}},
+   {id:"test",ic:"🔬",n:()=>"Test with both communities",d:"Find out how well it REALLY works for each group.",cost:()=>30000,ap:1,can:()=>!!g.model,run(){g.tested=true;const [a,b]=g.model.map(Math.round);
+      say(`Field test: ${a}% correct for ${g.m.groups[0].toLowerCase()}, ${b}% for ${g.m.groups[1].toLowerCase()}.`,a-b>10?"bad":"good");
+      if(a-b>10)say("Aunty Ada: \"There's the bias! Your AI learned mostly from one group, so it fails the other. More diverse data will fix it.\"","tip")}},
+   {id:"interview",ic:"🗣️",n:()=>"Interview future users",d:"Listen to people. Builds trust and gives insight.",cost:()=>0,ap:1,run(){g.trust=Math.min(100,g.trust+(g.perk==="people"?9:6));say(pickR([
+      `A woman from ${g.m.groups[1].toLowerCase()} said: "Will it work in my language?"`,"An elder asked: \"Who sees the information we give you?\"","A young user said: \"If it's wrong even twice, I'll stop using it.\"","Someone asked: \"Does it work on a small phone with no data?\""]),"tip")}},
+   {id:"translate",ic:"🌍",n:()=>"Add Hausa, Yoruba, Igbo and Pidgin",d:"More people can use it, especially outside cities.",cost:()=>60000,ap:1,can:()=>!g.translated,run(){g.translated=true;g.trust=Math.min(100,g.trust+6);say("Your app now speaks 5 languages. More people can use it with confidence.","good")}},
+   {id:"privacy",ic:"🔒",n:()=>"Protect users' privacy",d:"Encrypt data and ask permission properly.",cost:()=>40000,ap:1,can:()=>!g.privacy,run(){g.privacy=true;g.trust=Math.min(100,g.trust+5);say("You added strong privacy protection. Users' data is safe.","good")}},
+   {id:"launch",ic:"🚀",n:()=>"Launch to the public",d:"Release it. Users join based on accuracy and trust.",cost:()=>30000,ap:1,can:()=>!!g.model&&!g.launched,run(){g.launched=true;say(`${g.name} is live! 🎉`,"good");if(est()<70){g.trust-=10;say("It launched before it was ready. Early users were disappointed.","bad")}}},
+   {id:"pitch",ic:"🎤",n:()=>"Pitch to investors",d:"Convince Chief Bello to fund you. Once every 3 weeks.",cost:()=>0,ap:1,can:()=>g.week-g.pitchWeek>=3,run(){g.pitchWeek=g.week;pitchModal()}}
+  ];
+  /* ---------- events ---------- */
+  const EVENTS=[
+   {id:"sell",when:()=>g.week>=3,em:"💰",t:"An easy offer",x:()=>`A company offers ${naira(250000)} for your users' phone numbers and locations. "Nobody will know," they say.`,
+    c:[["Take the money",()=>{g.money+=250000;g.sold=true;return"You took the money. Your bank account is happy… for now."}],["Refuse. Users trusted us.",()=>{g.trust=Math.min(100,g.trust+8);return"Aunty Ada: \"Integrity is your best investment.\" Word spreads that you can be trusted."}]]},
+   {id:"scandal",when:()=>g.sold&&g.week>=6,em:"📰",t:"Scandal!",x:()=>"A newspaper reports that your startup sold users' data. People are angry.",c:[["Apologise publicly",()=>{g.trust=Math.max(0,g.trust-30);return"Trust dropped sharply. Selling data broke a promise you can't easily fix."}]]},
+   {id:"harm",when:()=>g.m.img,em:"🌫️",t:"Harmattan haze",x:()=>"Dusty harmattan air is making photos blurry, and the AI is confused.",
+    c:[[`Collect hazy photos too (${naira(30000)})`,()=>{g.money-=30000;g.data[0]+=60;g.data[1]+=60;return"Smart. Training on hazy photos makes your AI work in all seasons."}],["Ignore it",()=>{g.q=Math.max(.3,g.q-.08);return"Data quality dropped. AI struggles with conditions it never saw in training."}]]},
+   {id:"rain",when:()=>!g.m.img,em:"⛈️",t:"Unusual weather",x:()=>"This season is different from the past. Your AI was trained on old patterns.",
+    c:[[`Collect fresh data (${naira(30000)})`,()=>{g.money-=30000;g.data[0]+=60;g.data[1]+=60;return"Good call. AI must be updated when the world changes."}],["Keep the old model",()=>{g.q=Math.max(.3,g.q-.08);return"Your AI's predictions got worse. Old data doesn't always describe today."}]]},
+   {id:"nepa",when:()=>true,em:"🔌",t:"No light!",x:()=>"Power has been out for days. Your laptops are dying.",
+    c:[[`Buy diesel for the generator (${naira(40000)})`,()=>{g.money-=40000;return"The generator hums. Work continues."}],["Wait it out",()=>{g.skipAP=1;return"You'll have one less action next week."}]]},
+   {id:"complain",when:()=>g.launched&&g.model&&g.model[1]<70,em:"😟",t:"A complaint",x:()=>`Someone from ${g.m.groups[1].toLowerCase()} says: "Your app keeps getting it wrong for us. It's like it wasn't made for people like me."`,
+    c:[["Ignore it, most users are happy",()=>{g.trust=Math.max(0,g.trust-15);return"Ignoring unfairness damages trust. People talk."}],[`Visit and collect data there (${naira(30000)})`,()=>{g.money-=30000;g.data[1]+=150;g.trust=Math.min(100,g.trust+5);return"You listened and collected data from their community. Retrain to include them."}]]},
+   {id:"journalist",when:()=>g.launched,em:"🎙️",t:"Radio interview",x:()=>"A radio presenter asks: \"Is your AI perfect? Can people trust it 100%?\"",
+    c:[["\"Yes, it's perfect!\"",()=>{g.hype=true;g.users=g.users.map(u=>u+60);return"More people signed up… but when it makes mistakes, they'll feel lied to."}],["\"No AI is perfect. Here's how to use it wisely.\"",()=>{g.trust=Math.min(100,g.trust+8);return"Honesty builds long-term trust. Listeners respected that."}]]},
+   {id:"viral",when:()=>g.launched&&est()>=75,em:"📱",t:"You went viral!",x:()=>"A student made a TikTok about your app and it blew up.",c:[["Celebrate 🎉",()=>{g.users=g.users.map(u=>Math.min(1000,u+120));return"Hundreds of new users joined!"}]]},
+   {id:"rush",when:()=>g.data[0]+g.data[1]>=200,em:"⏩",t:"A shortcut",x:()=>"Your teammate says: \"Let's skip checking the labels. Nobody will notice a few mistakes.\"",
+    c:[["Okay, save time",()=>{g.q=Math.max(.3,g.q-.12);return"Bad labels teach the AI wrong lessons. Quality dropped."}],["No, quality matters",()=>{g.ap=Math.max(0,g.ap-1);return"It cost you time today, but your data stays clean."}]]},
+   {id:"competitor",when:()=>g.week>=5,em:"🏢",t:"A big competitor",x:()=>"A large company launches a similar app, but only in English and only for cities.",
+    c:[["Focus on everyone they ignore",()=>{if(g.translated){g.users[1]=Math.min(1000,g.users[1]+100);return"Because you support local languages, many people chose you!"}return"You'll need local languages and village data to stand out."}]]},
+   {id:"grant",when:()=>g.week>=4,em:"🏆",t:"Innovation grant",x:()=>`A tech hub in Abuja is giving grants of up to ${naira(400000)} to student startups.`,c:[["Pitch for it",()=>{setTimeout(()=>pitchModal(true),50);return"Get ready to pitch!"}],["Skip it",()=>"Maybe next time."]]},
+   {id:"leak",when:()=>g.week>=7&&!g.privacy&&g.launched,em:"🚨",t:"Data leak",x:()=>"Hackers found an unprotected database and leaked user information.",c:[["Fix it and inform users",()=>{g.trust=Math.max(0,g.trust-20);g.money-=40000;return"Privacy protection would have prevented this. Always protect users' data."}]]}
+  ];
+  /* ---------- modal ---------- */
+  function modal(html,after){const m=document.createElement("div");m.className="modal";m.innerHTML=`<div class="card" role="dialog" aria-modal="true">${html}</div>`;document.body.appendChild(m);
+    const f=m.querySelector("button,textarea");f&&f.focus();after&&after(m);return m}
+  function event(){
+    const pool=EVENTS.filter(e=>!g.usedEv.includes(e.id)&&e.when());
+    const forced=pool.find(e=>e.id==="scandal"&&Math.random()<.6)||pool.find(e=>e.id==="leak"&&Math.random()<.5);
+    const ev=forced||(Math.random()<.75&&pool.filter(e=>!["scandal","leak"].includes(e.id)).length?pickR(pool.filter(e=>!["scandal","leak"].includes(e.id))):null);
+    if(!ev){render();return}
+    g.usedEv.push(ev.id);
+    const m=modal(`<div class="em">${ev.em}</div><h2>${ev.t}</h2><p>${esc(ev.x())}</p><div class="choices">${ev.c.map((c,i)=>`<button class="choice" data-i="${i}">${esc(c[0])}</button>`).join("")}</div><p class="feedback" id="evf"></p>`);
+    m.querySelectorAll(".choice").forEach(b=>b.onclick=()=>{if(m.dataset.d)return;m.dataset.d=1;const r=ev.c[+b.dataset.i][1]();b.classList.add("right");say(`${ev.em} ${ev.t}: ${r}`,/drop|angry|worse|lied|damages|leak/i.test(r)?"bad":"");
+      $("#evf").textContent=r;const k=document.createElement("button");k.className="btn primary";k.textContent="Continue";k.style.marginTop="10px";k.onclick=()=>{m.remove();render()};m.querySelector(".card").appendChild(k);k.focus()});
+  }
+  function pitchModal(grant=false){
+    const m=modal(`<div class="em">🎤</div><h2>${grant?"Grant pitch":"Pitch to Chief Bello"}</h2><p>${grant?"The judges want":"Chief Bello is a tough investor. He wants"} to hear: the problem, who you help, how your AI works and why people will trust it. Write 2 to 4 sentences.</p>
+      <textarea id="pitchT" placeholder="${esc(g.name)} helps…"></textarea><div class="row" style="margin-top:8px"><button class="btn primary" id="pitchGo">Deliver pitch</button>${pill()}</div><p class="status" id="pst" aria-live="polite"></p><div id="pres"></div>`);
+    lightPills();
+    m.querySelector("#pitchGo").onclick=async()=>{const t=m.querySelector("#pitchT").value.trim();if(t.split(/\s+/).length<8){m.querySelector("#pst").textContent="Say a bit more. At least two full sentences.";return}
+      m.querySelector("#pitchGo").disabled=true;m.querySelector("#pst").textContent="The judge is thinking…";let r;
+      try{if(!AI)throw{code:"unavailable"};
+        r=await AI.json(`${SAFE}\n\nYou are Chief Bello, a fair but demanding Nigerian investor judging a secondary school student's startup pitch. Be encouraging and specific.\nStartup: ${g.name}. Problem: ${g.m.problem} Solution: ${g.m.ai}.\nPitch: "${t}"\nScore 1-10 on clarity, who it helps, how the AI works, and trust/fairness. Respond with only JSON: {"score": number, "liked": one sentence, "improve": one sentence}`,{modelTier:"quick",cache:false})}
+      catch(e){const w=t.toLowerCase();let s=3;[["help","solve","problem"],["farmer","student","trader","people","communit","village","famil"],["ai","data","learn","predict","model","photo","sms"],["trust","privacy","fair","safe","language","everyone"],["%","week","naira","₦","save","thousand","million"]].forEach(k=>{if(k.some(x=>w.includes(x)))s+=1.4});if(t.split(/\s+/).length>30)s+=.5;
+        r={score:Math.min(10,Math.round(s)),liked:"You explained what you're building with energy.",improve:"Say clearly who you help, how the AI learns, and why people can trust it."};if(AI)m.querySelector("#pst").textContent=aiErr(e)}
+      const sc=Math.max(1,Math.min(10,+r.score||5)),cash=sc*(grant?40000:30000);g.money+=cash;if(sc>=7)g.trust=Math.min(100,g.trust+3);
+      m.querySelector("#pst").textContent="";
+      m.querySelector("#pres").innerHTML=`<div class="idea-card"><h3>Score: ${sc}/10</h3><p><b>👍 Liked:</b> ${esc(r.liked)}</p><p><b>💡 Improve:</b> ${esc(r.improve)}</p><p><b>You raised ${naira(cash)}!</b></p><button class="btn primary" id="pcont">Continue</button></div>`;
+      say(`🎤 Pitch scored ${sc}/10 and raised ${naira(cash)}.`,"good");award("pitch",20,"First pitch");
+      m.querySelector("#pcont").onclick=()=>{m.remove();render()};m.querySelector("#pcont").focus()};
+  }
+  /* ---------- week cycle ---------- */
+  function endWeek(){
+    g.money-=15000;
+    if(g.launched&&g.model){
+      g.model.forEach((a,i)=>{let rate=Math.max(0,(a-55)/40)*(g.trust/100)*.28;if(i===1&&g.translated)rate*=1.35;if(i===0&&g.translated)rate*=1.1;
+        g.users[i]=Math.min(1000,g.users[i]+(1000-g.users[i])*rate);if(a<62)g.users[i]*=.88});
+      const income=(g.users[0]+g.users[1])*12;g.money+=income;
+      if(g.hype&&Math.random()<.4){g.trust=Math.max(0,g.trust-6);say("Users who were told it was 'perfect' are upset by its mistakes.","bad")}
+      say(`Week ${g.week}: ${Math.round(g.users[0]+g.users[1])} users. Sponsorship brought in ${naira(income)}.`);
+    }
+    if(g.money<0){finish("broke");return}
+    g.week++;
+    if(g.week>12){finish();return}
+    g.ap=3-g.skipAP;g.skipAP=0;
+    if(g.week===4&&!g.tested)say("Aunty Ada: \"Halfway soon. Have you tested your AI with both communities?\"","tip");
+    if(g.week===8&&!g.launched)say("Aunty Ada: \"Time is running out. An AI only helps people once it's launched.\"","tip");
+    event();
+  }
+  function helped(){return g.model?Math.round(g.users[0]*g.model[0]/100+g.users[1]*g.model[1]/100):0}
+  /* ---------- render ---------- */
+  function people(){const W=380,H=150;let s=`<svg viewBox="0 0 ${W} ${H}" style="width:100%" role="img" aria-label="Community: coloured people use your app">`;
+    s+=`<text x="95" y="14" text-anchor="middle" font-size="11" font-weight="700" fill="${css("--muted")}">${esc(g.m.groups[0])}</text><text x="285" y="14" text-anchor="middle" font-size="11" font-weight="700" fill="${css("--muted")}">${esc(g.m.groups[1])}</text><line x1="190" y1="20" x2="190" y2="${H}" stroke="${css("--line")}" stroke-width="2" stroke-dasharray="4 4"/>`;
+    [0,1].forEach(gi=>{const n=Math.round(g.users[gi]/1000*20),ok=g.model?Math.round(n*g.model[gi]/100):0;
+      for(let k=0;k<20;k++){const x=gi*190+22+(k%5)*36,y=30+Math.floor(k/5)*30;const col=k<ok?css("--green"):k<n?css("--coral"):css("--line");
+        s+=`<circle cx="${x}" cy="${y+5}" r="6" fill="${col}"/><rect x="${x-8}" y="${y+12}" width="16" height="12" rx="6" fill="${col}"/>`}});
+    return s+"</svg>"}
+  function spark(){if(g.versions.length<1)return`<p class="axis">Train your model to see accuracy here.</p>`;const v=g.versions,W=300,H=60,mx=Math.max(2,v.length);
+    const pts=v.map((a,i)=>`${10+i*(W-20)/(mx-1)},${H-((a-50)/50)*(H-10)-5}`).join(" ");
+    return `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:60px" aria-label="Accuracy across model versions"><polyline points="${pts}" fill="none" stroke="${css("--blue")}" stroke-width="3"/>${v.map((a,i)=>`<circle cx="${10+i*(W-20)/(mx-1)}" cy="${H-((a-50)/50)*(H-10)-5}" r="4" fill="${css("--blue")}"/>`).join("")}</svg>`}
+  function play(){render()}
+  function render(){if(!root.isConnected||!g||g.done)return;
+    const [c,r]=g.data,tot=c+r||1,gap=g.model&&g.tested?Math.abs(Math.round(g.model[0]-g.model[1])):null;
+    root.innerHTML=`<div class="hud"><div><small>Week</small><b>${g.week}/12</b></div><div><small>Money</small><b style="color:${g.money<150000?"var(--coral)":"inherit"}">${naira(g.money)}</b></div><div><small>Actions left</small><b>${"⚡".repeat(g.ap)||"none"}</b></div><div><small>Trust</small><b>${Math.round(g.trust)}</b></div><div><small>People helped</small><b>${helped()}</b></div></div>
+    <div class="game"><div class="panel"><h3>${g.m.em} ${esc(g.name)}: your AI</h3>
+      <div class="kv"><span>Data collected</span><b>${c+r} examples</b></div>
+      <div class="stack"><i style="width:${c/tot*100}%;background:var(--blue)"></i><i style="width:${r/tot*100}%;background:var(--sun)"></i></div>
+      <div class="legend" style="font-size:.8rem;margin-top:4px"><span><i class="dot" style="background:var(--blue)"></i>${esc(g.m.groups[0])} ${c}</span><span><i class="dot" style="background:var(--sun)"></i>${esc(g.m.groups[1])} ${r}</span></div>
+      <div class="kv"><span>Label quality</span><b>${Math.round(g.q*100)}%</b></div><div class="meter"><i style="width:${g.q*100}%;background:${g.q>.75?"var(--green)":"var(--sun)"}"></i></div>
+      <div class="kv"><span>Team's accuracy test</span><b>${g.model?est()+"%":"not trained"}</b></div>
+      <div class="kv"><span>Accuracy: ${esc(g.m.groups[0])}</span><b>${g.tested?Math.round(g.model[0])+"%":`<span class="hidden-stat">test to find out</span>`}</b></div>
+      <div class="kv"><span>Accuracy: ${esc(g.m.groups[1])}</span><b>${g.tested?Math.round(g.model[1])+"%":`<span class="hidden-stat">test to find out</span>`}</b></div>
+      ${gap!==null?`<div class="kv"><span>Fairness gap</span><b style="color:${gap>10?"var(--coral)":"var(--green)"}">${gap} points ${gap>10?"⚠️":"✓"}</b></div>`:""}
+      <p class="axis" style="margin:10px 0 0">Accuracy over versions</p>${spark()}
+      <div class="kv"><span>Status</span><b>${g.launched?"🟢 Live":"🛠️ Building"}${g.translated?" · 🌍":""}${g.privacy?" · 🔒":""}</b></div></div>
+    <div class="panel"><h3>The community</h3>${people()}<div class="legend" style="font-size:.8rem"><span><i class="dot" style="background:var(--green)"></i>Helped</span><span><i class="dot" style="background:var(--coral)"></i>Got a wrong answer</span><span><i class="dot" style="background:var(--line)"></i>Not using it yet</span></div>
+      <h3 style="margin-top:12px">Diary</h3><div class="log">${g.log.slice(0,14).map(l=>`<p class="${l.cls}">${esc(l.t)}</p>`).join("")}</div></div></div>
+    <section class="lab"><span class="lab-tag">Week ${g.week}</span><h2>Choose your moves</h2><p>You have ${g.ap} action${g.ap===1?"":"s"} left this week. Some moves cost money too.</p>
+      <div class="actions">${ACTS.map(a=>{const cost=a.cost(),ok=g.ap>=a.ap&&g.money>=cost&&(!a.can||a.can());return`<button class="act" data-id="${a.id}" ${ok?"":"disabled"}><span class="ic">${a.ic}</span><b>${esc(a.n())}</b><small>${a.d}</small><span class="cost">${cost?naira(cost):"Free"} · ${"⚡".repeat(a.ap)}</span></button>`}).join("")}</div>
+      <div class="row" style="margin-top:14px"><button class="btn sun" id="endW">${g.week===12?"Finish the game":"End week "+g.week}</button><button class="btn small" id="quitG">Restart</button></div></section>`;
+    root.querySelectorAll(".act").forEach(b=>b.onclick=()=>{const a=ACTS.find(x=>x.id===b.dataset.id);g.money-=a.cost();g.ap-=a.ap;a.run();render()});
+    $("#endW").onclick=endWeek;$("#quitG").onclick=e=>{const b=e.currentTarget;if(b.dataset.sure){g=null;setup()}else{b.dataset.sure=1;b.textContent="Click again to restart"}};
+  }
+  /* ---------- ending ---------- */
+  function finish(why){g.done=true;
+    const h=helped(),gap=g.model?Math.abs(Math.round(g.model[0]-g.model[1])):40,impact=Math.min(100,h/14),fair=Math.max(0,100-gap*3),trust=g.trust;
+    const total=why==="broke"?Math.min(35,impact):(impact*.5+fair*.25+trust*.25);const stars=Math.max(1,Math.min(5,Math.round(total/20)));
+    let title,story;
+    if(why==="broke"){title="Out of money";story="Your startup ran out of money before it could finish. Real founders plan their budget carefully and look for funding early."}
+    else if(!g.launched){title="Great lab, no launch";story="You built something, but it never reached the people who needed it. AI only helps once it's in people's hands."}
+    else if(gap>12){title="Fast but unfair";story=`Your AI worked well for ${g.m.groups[0].toLowerCase()} but often failed ${g.m.groups[1].toLowerCase()}. That's bias from unbalanced data.`}
+    else if(trust<40){title="Clever tech, little trust";story="Your AI was accurate, but people didn't trust your startup. Trust comes from honesty, privacy and listening."}
+    else if(stars>=4){title="Community hero";story="Your AI was accurate, fair and trusted. Real people's lives got better because of your choices."}
+    else{title="A solid start";story="You helped people and learned a lot. With more diverse data and testing, your AI could help even more."}
+    const lessons=[];
+    lessons.push(g.data[1]/(g.data[0]+g.data[1]||1)<.35?`Only ${Math.round(g.data[1]/(g.data[0]+g.data[1]||1)*100)}% of your data came from ${g.m.groups[1].toLowerCase()}. Unbalanced data creates unfair AI (lesson 7).`:`You collected data from both communities, which kept your AI fairer.`);
+    lessons.push(g.tested?"You tested with real communities, so you could see problems your team's test missed.":"You never tested with both communities, so you never saw how well it worked for each group.");
+    lessons.push(g.q>=.8?"High-quality labels helped your AI learn the right patterns.":"Messy labels held your AI back. Good data matters as much as lots of data.");
+    if(g.sold)lessons.push("Selling users' data earned quick money but broke their trust.");else lessons.push("You protected users' data, and that kept their trust.");
+    if(g.hype)lessons.push("Overhyping AI as 'perfect' backfired. Honest communication works better.");
+    store.set("simBest",(()=>{const b=store.get("simBest",null);return !b||stars>b.stars?{stars,name:g.name}:b})());
+    award("simdone",40,"Finished the startup game");
+    root.innerHTML=`<section class="lab" style="text-align:center"><span class="lab-tag">Week ${Math.min(12,g.week)} report</span><h2>${esc(g.name)}: ${title}</h2>
+      <div class="end-stars" aria-label="${stars} out of 5 stars">${"★".repeat(stars)}${"☆".repeat(5-stars)}</div><p style="margin:10px auto">${story}</p>
+      <div class="hud" style="position:static;margin:14px 0"><div><small>People helped</small><b>${h}</b></div><div><small>Fairness gap</small><b>${g.model?gap:"–"}</b></div><div><small>Trust</small><b>${Math.round(trust)}</b></div><div><small>Money left</small><b>${naira(Math.max(0,g.money))}</b></div><div><small>Model versions</small><b>${g.versions.length}</b></div></div></section>
+      <section class="lab"><h2>What your choices taught you</h2><ul class="report">${lessons.map(l=>`<li>${esc(l)}</li>`).join("")}</ul>
+      <div class="row"><button class="btn primary" id="again">Play again</button><button class="btn sun" id="saveR">Save report to gallery</button></div></section>`;
+    $("#again").onclick=()=>{g=null;setup()};
+    $("#saveR").onclick=()=>saveGal({type:"game",title:`${g.name}: ${title} (${stars}★)`,data:`${story}\n\nPeople helped: ${h}\nTrust: ${Math.round(trust)}\n\n${lessons.map(l=>"• "+l).join("\n")}`});
+  }
+  setup();
+};
+
+/* ---------- boot ---------- */
+renderXP();home();
+</script>
+</body>
+</html>
